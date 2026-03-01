@@ -22,6 +22,7 @@ function createWindow() {
     skipTaskbar: true,
     resizable: false,
     movable: true,
+    focusable: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -35,12 +36,12 @@ function createWindow() {
   server.setMainWindow(mainWindow);
 
   // 태스크바 위로 올리기 (최상단 레벨 - screen-saver)
-  mainWindow.setAlwaysOnTop(true, 'screen-saver');
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
 
   // 주기적으로 최상단 유지
   setInterval(() => {
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setAlwaysOnTop(true, 'screen-saver');
+      mainWindow.setAlwaysOnTop(true, 'screen-saver', 1);
     }
   }, 1000);
 }

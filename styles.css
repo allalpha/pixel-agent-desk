@@ -2,14 +2,21 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* 텍스트 선택 방지 (드래그 시 깨짐 방지) */
+  user-select: none;
 }
 
 body {
-  width: 100vw;
-  height: 100vh;
+  width: 220px;
+  height: 200px;
+  background-color: transparent;
   overflow: hidden;
-  background: transparent;
   -webkit-app-region: drag;
+  /* 중앙 정렬 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .container {
@@ -22,16 +29,24 @@ body {
   position: relative;
 }
 
+/* 캐릭터를 감싸는 실제 div (프레임 크기 고정) */
 .character {
   width: 48px;
   height: 64px;
+  position: relative;
+
+  /* 스프라이트 시트 설정 */
   background-image: url('avatar_00.png');
   background-size: 432px 256px;
   background-repeat: no-repeat;
+
+  /* 픽셀 아트 렌더링 설정 */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
-  position: relative;
+
+  /* 렌더링 위치를 정수로 고정 */
   transform: translateZ(0);
+  overflow: hidden; /* 프레임 밖으로 나가는 이미지 차단 */
 }
 
 /* 스프라이트 프레임 애니메이션 */

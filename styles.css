@@ -188,35 +188,42 @@ body {
 }
 
 .type-tag {
+  display: inline-block;
   font-family: 'Pretendard Variable', sans-serif;
   font-size: 8.5px;
   /* 기존 7px에서 확대 */
   font-weight: 900;
   text-transform: uppercase;
-  padding: 2px 6px;
-  /* 패딩 넓혀서 배경 도드라지게 */
-  border-radius: 4px;
+  padding: 3px 7px;
+  /* 패딩을 늘려 분명한 박스로 보이게 처리 */
+  border-radius: 5px;
   /* 라운드 처리 */
   letter-spacing: 0.05em;
   color: white;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
-  /* 글씨 그림자 추가 */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  /* 박스 그림자 추가 */
-  margin-top: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  /* 글씨 그림자 강화 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  /* 박스 그림자 강화로 패널처럼 보이게 */
+  margin-top: 2px;
 }
 
-/* 타입별 스타일 - 색상은 유지하되 위 공통 스타일에 의해 더 돋보임 */
-.type-main .type-tag {
-  background: #E91E63;
+/* 타입별 스타일 - 명확하게 보일 수 있도록 완전히 불투명한 쨍한 색상으로 지정 */
+.type-tag.type-main {
+  background: #E53935;
+  /* 강렬한 레드 (Main) */
+  border: 1px solid #B71C1C;
 }
 
-.type-sub .type-tag {
-  background: #9C27B0;
+.type-tag.type-sub {
+  background: #8E24AA;
+  /* 진한 퍼플 (Sub) */
+  border: 1px solid #4A148C;
 }
 
-.type-team .type-tag {
-  background: #2196F3;
+.type-tag.type-team {
+  background: #1E88E5;
+  /* 쨍한 블루 (Team) */
+  border: 1px solid #0D47A1;
 }
 
 /* 타입별 카드 하이라이트 (선택사항: 외곽선으로 구분) */

@@ -4,6 +4,7 @@
   "description": "Claude CLI JSONL logs를 실시간으로 감시하여 멀티 에이전트를 픽셀 아바타로 시각화",
   "main": "main.js",
   "scripts": {
+    "postinstall": "node install.js",
     "start": "electron .",
     "dev": "electron . --dev",
     "test": "jest",

@@ -24,10 +24,18 @@ Claude CLI의 Hook 이벤트를 실시간으로 수신하여 여러 에이전트
 npm install
 ```
 
+> **자동 설정**: `npm install` 실행 시 Claude CLI 설정 파일(`~/.claude/settings.json`)에 훅 스크립트가 자동으로 등록됩니다.
+
 ### 2. 실행
 ```bash
 npm start
 ```
+
+### 3. 대시보드 실행 (선택)
+```bash
+npm run dashboard
+```
+> 대시보드는 `http://localhost:3000`에서 접속 가능합니다.
 
 ### 3. 사용
 ### 3. 사용

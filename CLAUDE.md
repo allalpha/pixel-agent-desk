@@ -128,9 +128,31 @@ npm test -- --testPathPattern="agentManager"  # 특정 파일
 ## 실행
 
 ```bash
+npm install        # 의존성 설치 + 훅 자동 등록
 npm start          # Electron 앱 실행
 npm run dev        # 개발 모드 (DevTools 포함)
 npm run dashboard  # 대시보드 서버만 (포트 3000)
+```
+
+## 자동 훅 등록
+
+`npm install` 실행 시 `install.js`가 자동으로 실행되어 Claude CLI 설정 파일에 훅 스크립트를 등록합니다:
+
+- **설정 파일:** `~/.claude/settings.json` (Windows/Linux/macOS)
+- **등록 내용:** 모든 Claude CLI 훅 이벤트에 `hook.js` 자동 등록
+- **수동 등록:** 자동 등록이 실패할 경우 `~/.claude/settings.json`을 직접 수정
+
+**수동 등록 예시:**
+```json
+{
+  "hooks": {
+    "SessionStart": "node \"D:/projects/pixel-agent-desk-master/hook.js\"",
+    "SessionEnd": "node \"D:/projects/pixel-agent-desk-master/hook.js\"",
+    "PreToolUse": "node \"D:/projects/pixel-agent-desk-master/hook.js\"",
+    "PostToolUse": "node \"D:/projects/pixel-agent-desk-master/hook.js\"",
+    ...
+  }
+}
 ```
 
 ## 참고 문서

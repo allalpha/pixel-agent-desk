@@ -106,13 +106,25 @@ function playAnimation(agentId, element, animName) {
   agentStates.set(agentId, state);
 }
 
-function updateAgentState(agentId, container, state) {
-  const config = stateConfig[state] || stateConfig['Waiting'];
+function updateAgentState(agentId, container, agentOrState) {
+  // agentOrState가 객체면 agent, 문자열이면 이전 방식 호환성 유지용 state
+  const isAgentObj = typeof agentOrState === 'object';
+  const state = isAgentObj ? agentOrState.state : agentOrState;
+  const isAggregated = isAgentObj && agentOrState.isAggregated;
+
+  const baseConfig = stateConfig[state] || stateConfig['Waiting'];
+  const config = { ...baseConfig };
+
+  if (isAggregated) {
+    config.label = "Managing..."; // "Managing Subs..."는 너무 길 수 있음
+  }
+
   const bubble = container.querySelector('.agent-bubble');
   const character = container.querySelector('.agent-character');
 
   // Update container class
   container.className = `agent-card ${config.class}`;
+  if (isAggregated) container.classList.add('is-aggregated');
 
   // Play animation
   playAnimation(agentId, character, config.anim);
@@ -331,7 +343,7 @@ function addAgent(agent) {
   }
 
   // Set initial state
-  updateAgentState(agent.id, card, agent.state || 'Waiting');
+  updateAgentState(agent.id, card, agent);
 
   // Update grid layout
   updateGridLayout();
@@ -345,7 +357,7 @@ function updateAgent(agent) {
   const card = document.querySelector(`[data-agent-id="${agent.id}"]`);
   if (!card) return;
 
-  updateAgentState(agent.id, card, agent.state || 'Waiting');
+  updateAgentState(agent.id, card, agent);
   updateGridLayout();
   requestDynamicResize();
 }

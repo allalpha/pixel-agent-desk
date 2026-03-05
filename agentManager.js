@@ -90,11 +90,16 @@ class AgentManager extends EventEmitter {
 
     this.agents.set(agentId, agentData);
 
+    // 서브에이전트 상태 변화 시 부모 상태 리프레시
+    if (agentData.parentId) {
+      this.reEvaluateParentState(agentData.parentId);
+    }
+
     if (!existingAgent) {
-      this.emit('agent-added', agentData);
+      this.emit('agent-added', this.getAgentWithEffectiveState(agentId));
       console.log(`[AgentManager] Agent added: ${agentData.displayName} (${newState})`);
     } else if (newState !== prevState) {
-      this.emit('agent-updated', agentData);
+      this.emit('agent-updated', this.getAgentWithEffectiveState(agentId));
       console.log(`[AgentManager] ${agentData.displayName}: ${prevState} → ${newState}`);
     }
 
@@ -105,12 +110,45 @@ class AgentManager extends EventEmitter {
     const agent = this.agents.get(agentId);
     if (!agent) return false;
     this.agents.delete(agentId);
+
+    // 서브에이전트 삭제 시 부모 상태 리프레시
+    if (agent.parentId) {
+      this.reEvaluateParentState(agent.parentId);
+    }
+
     this.emit('agent-removed', { id: agentId, displayName: agent.displayName });
     console.log(`[AgentManager] Removed: ${agent.displayName}`);
     return true;
   }
 
-  getAllAgents() { return Array.from(this.agents.values()); }
+  getAllAgents() {
+    return Array.from(this.agents.keys()).map(id => this.getAgentWithEffectiveState(id));
+  }
+
+  getAgentWithEffectiveState(agentId) {
+    const agent = this.agents.get(agentId);
+    if (!agent) return null;
+
+    // 이미 Working 상태면 그대로 반환
+    if (agent.state === 'Working' || agent.state === 'Thinking') return agent;
+
+    // 자식(Subagent)들 중 하나라도 Working/Thinking 이면 부모 상태도 Working으로 표시
+    const children = Array.from(this.agents.values()).filter(a => a.parentId === agentId);
+    const someChildWorking = children.some(c => c.state === 'Working' || c.state === 'Thinking');
+
+    if (someChildWorking) {
+      return { ...agent, state: 'Working', isAggregated: true };
+    }
+
+    return agent;
+  }
+
+  reEvaluateParentState(parentId) {
+    const parent = this.agents.get(parentId);
+    if (!parent) return;
+    // 부모의 상태 업데이트 이벤트를 강제로 발생시켜 렌더러가 Working으로 인지하게 함
+    this.emit('agent-updated', this.getAgentWithEffectiveState(parentId));
+  }
   getAgent(agentId) { return this.agents.get(agentId) || null; }
   getAgentCount() { return this.agents.size; }
   dismissAgent(agentId) { return this.removeAgent(agentId); }

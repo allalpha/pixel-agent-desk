@@ -37,7 +37,7 @@ const agentStates = new Map(); // agentId -> { animName, frameIdx, rafId, startT
 
 // --- P1-1: 통합 requestAnimationFrame 애니메이션 매니저 ---
 const animationManager = {
-  animations: new Map(), // agentId -> { agentId, element, animName, sequence, frameIdx, lastTime }
+  animations: new Map(), // agentId -> { agentId, element, animName, sequence, frameIdx, lastTime, rafId }
 
   start(agentId, element, animName) {
     // Stop existing animation for this agent
@@ -46,13 +46,22 @@ const animationManager = {
     const sequence = ANIM_SEQUENCES[animName];
     if (!sequence) return;
 
+    // Draw first frame immediately
+    const firstFrame = sequence.frames[0];
+    const col = firstFrame % SHEET.cols;
+    const row = Math.floor(firstFrame / SHEET.cols);
+    const x = col * -SHEET.width;
+    const y = row * -SHEET.height;
+    element.style.backgroundPosition = `${x}px ${y}px`;
+
     const animation = {
       agentId,
       element,
       animName,
       sequence,
       frameIdx: 0,
-      lastTime: performance.now()
+      lastTime: performance.now(),
+      rafId: null
     };
 
     this.animations.set(agentId, animation);
@@ -65,7 +74,7 @@ const animationManager = {
     const animation = this.animations.get(agentId);
     if (!animation) return;
 
-    const rafId = requestAnimationFrame((currentTime) => {
+    animation.rafId = requestAnimationFrame((currentTime) => {
       if (!this.animations.has(agentId)) {
         return;
       }
@@ -89,10 +98,11 @@ const animationManager = {
         }
 
         // Draw frame
-        const col = animation.frameIdx % 9;
-        const row = Math.floor(animation.frameIdx / 9);
-        const x = col * -48;
-        const y = row * -64;
+        const frameNum = animation.sequence.frames[animation.frameIdx];
+        const col = frameNum % SHEET.cols;
+        const row = Math.floor(frameNum / SHEET.cols);
+        const x = col * -SHEET.width;
+        const y = row * -SHEET.height;
         animation.element.style.backgroundPosition = `${x}px ${y}px`;
 
         animation.lastTime = currentTime;
@@ -101,16 +111,15 @@ const animationManager = {
       // Continue loop
       this.loop(agentId);
     });
-
-    // Store RAF ID for cleanup
-    const state = agentStates.get(agentId) || {};
-    state.rafId = rafId; // Note: we can't actually store RAF ID, but we track via animations Map
-    agentStates.set(agentId, state);
   },
 
   stop(agentId) {
     const animation = this.animations.get(agentId);
     if (animation) {
+      // Cancel the RAF if it exists
+      if (animation.rafId) {
+        cancelAnimationFrame(animation.rafId);
+      }
       this.animations.delete(agentId);
     }
 
@@ -130,12 +139,8 @@ const agentAvatars = new Map(); // agentId -> random avatar path
 
 // --- 유틸리티 함수 ---
 
-function formatTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
+// Use shared formatTime from utils.js
+const { formatTime } = require('./utils');
 
 function drawFrame(element, frameIndex) {
   if (!element) return;

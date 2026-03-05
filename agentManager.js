@@ -129,13 +129,23 @@ class AgentManager extends EventEmitter {
     const agent = this.agents.get(agentId);
     if (!agent) return null;
 
+    // 이미 Help나 Error 상태면 그대로 반환 (최우선순위)
+    if (agent.state === 'Help' || agent.state === 'Error') return agent;
+
+    // 자식(Subagent)들 상태 확인
+    const children = Array.from(this.agents.values()).filter(a => a.parentId === agentId);
+
+    // 1. 자식 중 하나라도 Help/Error 면 부모 상태도 Help로 표시 (사용자 개입 필요 알림)
+    const someChildNeedsHelp = children.some(c => c.state === 'Help' || c.state === 'Error');
+    if (someChildNeedsHelp) {
+      return { ...agent, state: 'Help', isAggregated: true };
+    }
+
     // 이미 Working 상태면 그대로 반환
     if (agent.state === 'Working' || agent.state === 'Thinking') return agent;
 
-    // 자식(Subagent)들 중 하나라도 Working/Thinking 이면 부모 상태도 Working으로 표시
-    const children = Array.from(this.agents.values()).filter(a => a.parentId === agentId);
+    // 2. 자식 중 하나라도 Working/Thinking 이면 부모 상태도 Working으로 표시
     const someChildWorking = children.some(c => c.state === 'Working' || c.state === 'Thinking');
-
     if (someChildWorking) {
       return { ...agent, state: 'Working', isAggregated: true };
     }

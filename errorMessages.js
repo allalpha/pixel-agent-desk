@@ -131,6 +131,22 @@ const ErrorCodeMessages = {
       { type: 'retry', label: '다시 시도' },
       { type: 'reset', label: '초기화' }
     ]
+  },
+  'E010': {
+    short: '훅 데이터 검증 실패',
+    detail: '클로드로부터 받은 데이터 형식이 올바르지 않아요. 스키마를 확인해주세요.',
+    recovery: [
+      { type: 'skip', label: '알림 보류' },
+      { type: 'view_logs', label: '로그 보기' }
+    ]
+  },
+  'E000': {
+    short: '알 수 없는 오류',
+    detail: '예상치 못한 문제가 발생했어요. 로그를 확인해주세요.',
+    recovery: [
+      { type: 'retry', label: '다시 시도' },
+      { type: 'view_logs', label: '로그 보기' }
+    ]
   }
 };
 
@@ -138,7 +154,7 @@ const ErrorCodeMessages = {
  * 에러 코드로 메시지 조회
  */
 function getMessageByErrorCode(errorCode) {
-  return ErrorCodeMessages[errorCode] || ErrorCodeMessages['E001'];
+  return ErrorCodeMessages[errorCode] || ErrorCodeMessages['E000'];
 }
 
 /**

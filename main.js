@@ -6,6 +6,7 @@ const AgentManager = require('./agentManager');
 const { adaptAgentToMissionControl } = require('./missionControlAdapter');
 const errorHandler = require('./errorHandler');
 const Ajv = require('ajv');
+const { getWindowSizeForAgents, checkSessionActive } = require('./utils');
 
 // Debug logging to file
 const debugLog = (msg) => {
@@ -18,72 +19,6 @@ const debugLog = (msg) => {
 let mainWindow;
 let agentManager = null;
 let keepAliveInterval = null;
-
-// =====================================================
-// 에이전트 수에 따른 동적 윈도우 크기 (P1-6)
-// =====================================================
-function getWindowSizeForAgents(agentsOrCount) {
-  let count = 0;
-  let agents = [];
-  if (Array.isArray(agentsOrCount)) {
-    agents = agentsOrCount;
-    count = agents.length;
-  } else {
-    count = agentsOrCount || 0;
-  }
-
-  if (count <= 1) return { width: 220, height: 300 };
-
-  const CARD_W = 90;
-  const GAP = 10;
-  const OUTER = 120 + 20; // 팀 디자인 여백 감안
-  const ROW_H = 240;
-  const BASE_H = 300;
-  const maxCols = 10;
-
-  if (agents.length > 0) {
-    const groups = {};
-    agents.forEach(a => {
-      const p = a.projectPath || 'default';
-      if (!groups[p]) groups[p] = [];
-      groups[p].push(a);
-    });
-
-    let teamRows = 0;
-    let soloCount = 0;
-    let maxColsInRow = 0;
-
-    for (const group of Object.values(groups)) {
-      const isTeam = group.some(a => a.isSubagent || a.isTeammate);
-      if (isTeam) {
-        teamRows += Math.ceil(group.length / maxCols);
-        maxColsInRow = Math.max(maxColsInRow, Math.min(group.length, maxCols));
-      } else {
-        soloCount += group.length;
-      }
-    }
-
-    const soloRows = Math.ceil(soloCount / maxCols);
-    if (soloCount > 0) {
-      maxColsInRow = Math.max(maxColsInRow, Math.min(soloCount, maxCols));
-    }
-
-    const totalRows = teamRows + soloRows;
-    const width = Math.max(220, maxColsInRow * CARD_W + (maxColsInRow - 1) * GAP + OUTER);
-    const height = BASE_H + Math.max(0, totalRows - 1) * ROW_H + (teamRows * 30); // 팀 그룹 여백(padding) 감안
-
-    return { width, height };
-  }
-
-  // Fallback (agents 배열이 없는 경우 단순 count로 계산)
-  const cols = Math.min(count, maxCols);
-  const rows = Math.ceil(count / maxCols);
-
-  const width = Math.max(220, cols * CARD_W + (cols - 1) * GAP + OUTER);
-  const height = BASE_H + (rows - 1) * ROW_H;
-
-  return { width, height };
-}
 
 function resizeWindowForAgents(agentsOrCount) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -721,66 +656,6 @@ function recoverExistingSessions() {
 // =====================================================
 const sessionPids = new Map(); // sessionId → 실제 claude 프로세스 PID
 
-/**
- * 세션이 활성 상태인지 확인하고 필요시 에이전트를 재생성합니다.
- * @param {string} sessionId - 세션 ID
- * @param {number} pid - 프로세스 ID
- * @returns {Promise<boolean>} 세션이 활성 상태이면 true
- */
-async function checkSessionActiveAndRecreate(sessionId, pid) {
-  try {
-    // PowerShell을 사용하여 프로세스가 실제로 실행 중인지 확인
-    const ps = require('child_process').spawnSync(
-      'powershell.exe',
-      [
-        '-NoProfile',
-        '-Command',
-        `$proc = Get-Process -Id ${pid} -ErrorAction SilentlyContinue; ` +
-        `if ($proc) { 'true' } else { 'false' }`
-      ],
-      { encoding: 'utf8', timeout: 5000 }
-    );
-
-    const isActive = ps.stdout.trim() === 'true';
-
-    if (!isActive) {
-      // 프로세스가 존재하지 않으면 부모 프로세스 확인
-      const psParent = require('child_process').spawnSync(
-        'powershell.exe',
-        [
-          '-NoProfile',
-          '-Command',
-          `$proc = Get-Process -Id ${pid} -ErrorAction SilentlyContinue; ` +
-          `if ($proc) { $proc.Parent.Id } else { '' }`
-        ],
-        { encoding: 'utf8', timeout: 5000 }
-      );
-
-      const parentId = psParent.stdout.trim();
-      if (parentId) {
-        // 부모 프로세스 확인
-        const psParentCheck = require('child_process').spawnSync(
-          'powershell.exe',
-          [
-            '-NoProfile',
-            '-Command',
-            `$parent = Get-Process -Id ${parentId} -ErrorAction SilentlyContinue; ` +
-            `if ($parent) { 'true' } else { 'false' }`
-          ],
-          { encoding: 'utf8', timeout: 5000 }
-        );
-
-        return psParentCheck.stdout.trim() === 'true';
-      }
-    }
-
-    return isActive;
-  } catch (error) {
-    debugLog(`[Live] Failed to check session activity for ${sessionId.slice(0, 8)}: ${error.message}`);
-    return false; // 오류 발생시 비활성으로 처리하여 제거되도록 함
-  }
-}
-
 function startLivenessChecker() {
   const INTERVAL = 3000;   // 3초
   const GRACE_MS = 15000;  // 등록 후 15초는 스킵 (WMI 조회 완료 전 유예)
@@ -840,7 +715,7 @@ function startLivenessChecker() {
             debugLog(`[Live] ${agent.id.slice(0, 8)} pid=${pid} DEAD → checking session activity`);
 
             // 세션 활성 상태 확인 (WMI 쿼리)
-            checkSessionActiveAndRecreate(agent.id, pid)
+            checkSessionActive(agent.id, pid)
               .then(isActive => {
                 if (isActive) {
                   debugLog(`[Live] ${agent.id.slice(0, 8)} session is active, recreating agent`);

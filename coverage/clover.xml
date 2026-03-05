@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1772694232401" clover="3.2.0">
-  <project timestamp="1772694232401" name="All files">
-    <metrics statements="1393" coveredstatements="235" conditionals="804" coveredconditionals="152" methods="246" coveredmethods="47" elements="2443" coveredelements="434" complexity="0" loc="1393" ncloc="1393" packages="1" files="13" classes="13"/>
+<coverage generated="1772694735855" clover="3.2.0">
+  <project timestamp="1772694735855" name="All files">
+    <metrics statements="1393" coveredstatements="235" conditionals="803" coveredconditionals="152" methods="246" coveredmethods="47" elements="2442" coveredelements="434" complexity="0" loc="1393" ncloc="1393" packages="1" files="13" classes="13"/>
     <file name="agentManager.js" path="E:\projects\pixel-agent-desk-master\agentManager.js">
       <metrics statements="92" coveredstatements="89" conditionals="101" coveredconditionals="88" methods="23" coveredmethods="21"/>
       <line num="7" count="1" type="stmt"/>
@@ -228,7 +228,7 @@
       <line num="1" count="0" type="stmt"/>
     </file>
     <file name="main.js" path="E:\projects\pixel-agent-desk-master\main.js">
-      <metrics statements="521" coveredstatements="0" conditionals="309" coveredconditionals="0" methods="76" coveredmethods="0"/>
+      <metrics statements="521" coveredstatements="0" conditionals="308" coveredconditionals="0" methods="76" coveredmethods="0"/>
       <line num="1" count="0" type="stmt"/>
       <line num="2" count="0" type="stmt"/>
       <line num="3" count="0" type="stmt"/>
@@ -372,7 +372,7 @@
       <line num="319" count="0" type="stmt"/>
       <line num="320" count="0" type="cond" truecount="0" falsecount="2"/>
       <line num="321" count="0" type="stmt"/>
-      <line num="322" count="0" type="cond" truecount="0" falsecount="5"/>
+      <line num="322" count="0" type="cond" truecount="0" falsecount="4"/>
       <line num="323" count="0" type="stmt"/>
       <line num="324" count="0" type="stmt"/>
       <line num="328" count="0" type="stmt"/>

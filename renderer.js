@@ -134,13 +134,10 @@ const animationManager = {
 
 // --- 아바타 관리 ---
 let availableAvatars = [];
-let idleAvatar = 'avatar_0.png';
+let idleAvatar = 'avatar_0.webp';
 const agentAvatars = new Map(); // agentId -> random avatar path
 
 // --- 유틸리티 함수 ---
-
-// Use shared formatTime from utils.js
-const { formatTime } = require('./utils');
 
 function drawFrame(element, frameIndex) {
   if (!element) return;
@@ -220,7 +217,7 @@ function updateAgentState(agentId, container, agentOrState) {
 
       agentState.timerInterval = setInterval(() => {
         const elapsed = Date.now() - agentState.startTime;
-        agentState.lastFormattedTime = formatTime(elapsed);
+        agentState.lastFormattedTime = window.electronAPI.formatTime(elapsed);
         if (bubble) {
           bubble.textContent = `${config.label} (${agentState.lastFormattedTime})`;
         }
@@ -229,7 +226,7 @@ function updateAgentState(agentId, container, agentOrState) {
 
     // Immediate display
     const elapsed = Date.now() - agentState.startTime;
-    agentState.lastFormattedTime = formatTime(elapsed);
+    agentState.lastFormattedTime = window.electronAPI.formatTime(elapsed);
     if (bubble) {
       bubble.textContent = `${config.label} (${agentState.lastFormattedTime})`;
     }
@@ -269,6 +266,7 @@ function createAgentCard(agent) {
   const card = document.createElement('div');
   card.className = 'agent-card';
   card.dataset.agentId = agent.id;
+  card.tabIndex = 0; // Make keyboard focusable
 
   // ARIA 속성 추가 - 접근성 개선
   card.setAttribute('role', 'article');
@@ -660,26 +658,26 @@ function createWebDashboardButton() {
   const button = document.createElement('button');
   button.id = 'web-dashboard-btn';
   button.className = 'web-dashboard-btn';
-  button.innerHTML = '🌐 View as Web';
-  button.title = 'Open Mission Control Dashboard';
+  button.innerHTML = '🌐 대시보드';
+  button.title = '대시보드 열기 (Ctrl+D)';
 
   button.onclick = async () => {
     button.disabled = true;
     const originalHTML = button.innerHTML;
-    button.innerHTML = '⏳ Opening...';
+    button.innerHTML = '⏳ 여는 중...';
 
     try {
       if (window.electronAPI && window.electronAPI.openWebDashboard) {
         const result = await window.electronAPI.openWebDashboard();
 
         if (result.success) {
-          button.innerHTML = '✓ Opened';
+          button.innerHTML = '✓ 열림';
           setTimeout(() => {
-            button.innerHTML = '🌐 View as Web';
+            button.innerHTML = '🌐 대시보드';
             button.disabled = false;
           }, 2000);
         } else {
-          button.innerHTML = '✗ Failed';
+          button.innerHTML = '✗ 실패';
           console.error('[Renderer] Failed to open dashboard:', result.error);
           setTimeout(() => {
             button.innerHTML = originalHTML;
@@ -693,7 +691,7 @@ function createWebDashboardButton() {
       }
     } catch (error) {
       console.error('[Renderer] Error opening dashboard:', error);
-      button.innerHTML = '✗ Error';
+      button.innerHTML = '✗ 에러';
       setTimeout(() => {
         button.innerHTML = originalHTML;
         button.disabled = false;
@@ -704,7 +702,200 @@ function createWebDashboardButton() {
   return button;
 }
 
+
 // --- 이벤트 리스너 등록 ---
+
+// Keyboard shortcuts setup
+function setupKeyboardShortcuts() {
+  document.addEventListener('keydown', (e) => {
+    // Ctrl/Cmd + D: Open Mission Control Dashboard
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+      e.preventDefault();
+      const dashboardBtn = document.getElementById('web-dashboard-btn');
+      if (dashboardBtn && !dashboardBtn.disabled) {
+        dashboardBtn.click();
+      }
+    }
+
+
+    // Ctrl/Cmd + W: Close focused/selected agent
+    if ((e.ctrlKey || e.metaKey) && e.key === 'w') {
+      e.preventDefault();
+      const focusedAgent = document.querySelector('.agent-card[tabindex="0"]:focus') ||
+                           document.querySelector('.agent-card:focus');
+      if (focusedAgent) {
+        const agentId = focusedAgent.dataset.agentId;
+        if (agentId && window.electronAPI && window.electronAPI.dismissAgent) {
+          window.electronAPI.dismissAgent(agentId);
+        }
+      }
+    }
+
+    // Tab: Navigate between agents
+    if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const agents = Array.from(document.querySelectorAll('.agent-card'));
+      if (agents.length === 0) return;
+
+      const currentIndex = agents.findIndex(card => card === document.activeElement);
+
+      if (e.shiftKey) {
+        // Shift+Tab: Previous agent
+        e.preventDefault();
+        const prevIndex = currentIndex <= 0 ? agents.length - 1 : currentIndex - 1;
+        agents[prevIndex].focus();
+      } else if (currentIndex === -1) {
+        // Tab: First agent
+        e.preventDefault();
+        agents[0].focus();
+      }
+      // Normal Tab: Let browser handle it
+    }
+
+    // Escape: Close any overlays/modals
+    if (e.key === 'Escape') {
+      // Close context menu if open
+      const contextMenu = document.querySelector('.context-menu');
+      if (contextMenu) {
+        contextMenu.remove();
+      }
+    }
+
+    // Enter: Focus terminal for active agent
+    if (e.key === 'Enter') {
+      const focusedAgent = document.querySelector('.agent-card:focus') ||
+                           document.querySelector('.agent-card[tabindex="0"]:focus');
+      if (focusedAgent) {
+        const agentId = focusedAgent.dataset.agentId;
+        if (agentId && window.electronAPI && window.electronAPI.focusTerminal) {
+          window.electronAPI.focusTerminal(agentId);
+        }
+      }
+    }
+
+    // Arrow keys: Navigate between agents
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      const agents = Array.from(document.querySelectorAll('.agent-card'));
+      if (agents.length === 0) return;
+
+      const currentIndex = agents.findIndex(card => card === document.activeElement);
+      if (currentIndex === -1) return;
+
+      e.preventDefault();
+
+      let nextIndex;
+      switch (e.key) {
+        case 'ArrowLeft':
+          nextIndex = Math.max(0, currentIndex - 1);
+          break;
+        case 'ArrowRight':
+          nextIndex = Math.min(agents.length - 1, currentIndex + 1);
+          break;
+        case 'ArrowUp':
+          // Simple row navigation (approximate)
+          nextIndex = Math.max(0, currentIndex - 10);
+          break;
+        case 'ArrowDown':
+          // Simple row navigation (approximate)
+          nextIndex = Math.min(agents.length - 1, currentIndex + 10);
+          break;
+      }
+
+      agents[nextIndex].focus();
+    }
+  });
+
+  console.log('[Renderer] Keyboard shortcuts registered');
+}
+
+// Context menu setup
+function setupContextMenu() {
+  document.addEventListener('contextmenu', (e) => {
+    const agentCard = e.target.closest('.agent-card');
+    if (!agentCard) return;
+
+    e.preventDefault();
+
+    const agentId = agentCard.dataset.agentId;
+    if (!agentId) return;
+
+    // Remove existing context menu
+    const existingMenu = document.querySelector('.context-menu');
+    if (existingMenu) existingMenu.remove();
+
+    // Create context menu
+    const menu = document.createElement('div');
+    menu.className = 'context-menu';
+    menu.innerHTML = `
+      <div class="context-menu-item" data-action="focus">
+        <span class="menu-icon">🎯</span>
+        <span class="menu-label">Focus Terminal</span>
+        <span class="menu-shortcut">Enter</span>
+      </div>
+      <div class="context-menu-item" data-action="logs">
+        <span class="menu-icon">📋</span>
+        <span class="menu-label">View Logs</span>
+      </div>
+      <div class="context-menu-item" data-action="timeline">
+        <span class="menu-icon">📊</span>
+        <span class="menu-label">View Timeline</span>
+      </div>
+      <div class="context-menu-divider"></div>
+      <div class="context-menu-item" data-action="close" class="danger">
+        <span class="menu-icon">✕</span>
+        <span class="menu-label">Close Agent</span>
+        <span class="menu-shortcut">Ctrl+W</span>
+      </div>
+    `;
+
+    // Position menu
+    menu.style.left = `${e.clientX}px`;
+    menu.style.top = `${e.clientY}px`;
+
+    // Add click handlers
+    menu.querySelectorAll('.context-menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const action = item.dataset.action;
+
+        switch (action) {
+          case 'focus':
+            if (window.electronAPI && window.electronAPI.focusTerminal) {
+              window.electronAPI.focusTerminal(agentId);
+            }
+            break;
+          case 'logs':
+            console.log('[ContextMenu] View logs for agent:', agentId);
+            // TODO: Implement log viewer
+            break;
+          case 'timeline':
+            console.log('[ContextMenu] View timeline for agent:', agentId);
+            // TODO: Implement timeline viewer
+            break;
+          case 'close':
+            if (window.electronAPI && window.electronAPI.dismissAgent) {
+              window.electronAPI.dismissAgent(agentId);
+            }
+            break;
+        }
+
+        menu.remove();
+      });
+    });
+
+    document.body.appendChild(menu);
+
+    // Close menu on click outside
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
+        }
+      });
+    }, 0);
+  });
+
+  console.log('[Renderer] Context menu registered');
+}
 
 async function init() {
   if (!window.electronAPI) {
@@ -712,12 +903,19 @@ async function init() {
     return;
   }
 
+  // Setup keyboard shortcuts
+  setupKeyboardShortcuts();
+
+  // Setup context menu
+  setupContextMenu();
+
   // 아바타 리스트 로드
   if (window.electronAPI.getAvatars) {
     try {
       const files = await window.electronAPI.getAvatars();
       const validFiles = files.filter(f => f.match(/\.(png|jpe?g|webp|gif)$/i));
-      const zero = validFiles.find(f => f.includes('_0.') || f === 'avatar_00.png' || f === 'avatar_0.png');
+      // 0. 또는 _0.를 포함하는 파일을 우선 찾음 (avatar_0.png, avatar_00.png 등)
+      const zero = validFiles.find(f => f.includes('0.') || f.includes('_0.'));
       if (zero) idleAvatar = zero;
 
       availableAvatars = validFiles.filter(f => f !== idleAvatar);

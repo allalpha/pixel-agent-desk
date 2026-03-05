@@ -8,6 +8,45 @@ const errorHandler = require('./errorHandler');
 const Ajv = require('ajv');
 const { getWindowSizeForAgents, checkSessionActive } = require('./utils');
 
+// 에러 로그 파일로 저장
+const errorLogPath = path.join(__dirname, 'startup-error.log');
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)).join(' ');
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+
+  // 파일에 저장
+  try {
+    fs.appendFileSync(errorLogPath, logMessage);
+  } catch (e) {}
+
+  // 원래 console.error도 호출
+  originalConsoleError.apply(console, args);
+};
+
+// 전역 에러 핸들러
+process.on('uncaughtException', (error) => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] UNCAUGHT EXCEPTION: ${error.message}\n${error.stack}\n`;
+  try {
+    fs.appendFileSync(errorLogPath, logMessage);
+  } catch (e) {}
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] UNHANDLED REJECTION: ${reason}\n`;
+  try {
+    fs.appendFileSync(errorLogPath, logMessage);
+  } catch (e) {}
+});
+
+// Mission Control WebSocket broadcast (사용하지 않음 - 별도 서버 불필요)
+function broadcastUpdate(type, data) {
+  // 현재는 사용하지 않음. 필요시 구현
+}
+
 // Debug logging to file
 const debugLog = (msg) => {
   const timestamp = new Date().toISOString();
@@ -93,6 +132,8 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
     mainWindow.setAlwaysOnTop(true, 'screen-saver');
+    // 개발자 도구 열기 (디버깅용)
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   });
 
   // 작업표시줄 복구 폴링 (250ms)
@@ -136,19 +177,6 @@ function createMissionControlWindow() {
   }
 
   try {
-    // Generate auth token for this session
-    missionControlAuthToken = generateAuthToken();
-    debugLog(`[MissionControl] Generated auth token: ${missionControlAuthToken.slice(0, 8)}...`);
-
-    // Get current agents and adapt them for Mission Control
-    const agents = agentManager ? agentManager.getAllAgents() : [];
-    const adaptedAgents = agents.map(agent => adaptAgentToMissionControl(agent));
-    const agentDataParam = encodeURIComponent(JSON.stringify(adaptedAgents));
-
-    // Construct URL with auth and data
-    // Mission Control should be running on localhost:3000
-    const url = `http://localhost:3000?token=${missionControlAuthToken}&agents=${agentDataParam}&source=pixel-agent-desk`;
-
     // Get display dimensions for positioning
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
 
@@ -158,19 +186,30 @@ function createMissionControlWindow() {
       height: Math.floor(height * 0.8),
       x: Math.floor(width * 0.1),
       y: Math.floor(height * 0.1),
-      title: 'Mission Control Dashboard',
+      title: '픽셀 에이전트 데스크',
       backgroundColor: '#ffffff',
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        sandbox: true,
+        sandbox: false,
         preload: path.join(__dirname, 'missionControlPreload.js')
       }
     });
 
+    // Load the HTML file directly (no HTTP server needed)
+    missionControlWindow.loadFile('mission-control.html');
+
     // Log when window is ready
     missionControlWindow.webContents.on('did-finish-load', () => {
       debugLog('[MissionControl] Window loaded successfully');
+
+      // Send initial agent data
+      if (agentManager) {
+        const agents = agentManager.getAllAgents();
+        const adaptedAgents = agents.map(agent => adaptAgentToMissionControl(agent));
+        debugLog(`[MissionControl] Sending ${adaptedAgents.length} agents to dashboard`);
+        missionControlWindow.webContents.send('mission-control-initial-data', adaptedAgents);
+      }
     });
 
     // Handle navigation errors
@@ -188,8 +227,7 @@ function createMissionControlWindow() {
       missionControlAuthToken = null;
     });
 
-    missionControlWindow.loadURL(url);
-    debugLog('[MissionControl] Window created and loading URL');
+    debugLog('[MissionControl] Window created');
 
     return { success: true };
 
@@ -651,18 +689,79 @@ function recoverExistingSessions() {
 }
 
 // =====================================================
-// 생사 확인: sessionPids의 실제 PID로 process.kill(pid,0) 직접 체크
-// PID 없는 경우(새 세션 등)는 Grace 기간 내 훅이 오면 자동 등록됨
+// 생사 확인: Multi-Tier Liveness Checker with Auto-Recovery
 // =====================================================
 const sessionPids = new Map(); // sessionId → 실제 claude 프로세스 PID
+
+/**
+ * Tier 1: Basic process existence check using process.kill(pid, 0)
+ */
+async function checkLivenessTier1(agentId, pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Tier 2: Process responsiveness check via PowerShell
+ */
+async function checkLivenessTier2(agentId, pid) {
+  try {
+    const { spawnSync } = require('child_process');
+    const result = spawnSync('powershell.exe', [
+      '-NoProfile',
+      '-Command',
+      `$proc = Get-Process -Id ${pid} -ErrorAction SilentlyContinue;
+       if ($proc -and $proc.Responding) { 'true' } else { 'false' }`
+    ], { encoding: 'utf8', timeout: 5000 });
+    return result.stdout.trim() === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Tier 3: Session activity check via JSONL and process tree
+ */
+async function checkLivenessTier3(agentId, pid) {
+  return await checkSessionActive(agentId, pid);
+}
+
+/**
+ * Attempt to recover a ghost agent by checking if session is still active
+ */
+async function attemptAgentRecovery(agentId, pid) {
+  try {
+    debugLog(`[Live-Tier3] Attempting recovery for ${agentId.slice(0, 8)}...`);
+
+    const isActive = await checkLivenessTier3(agentId, pid);
+    if (isActive) {
+      const agent = agentManager.getAgent(agentId);
+      if (agent) {
+        // Agent is alive but was marked as ghost - recover it
+        agentManager.updateAgent({ ...agent, state: 'Waiting' }, 'live-recreate');
+        debugLog(`[Live-Tier3] ✓ Recovery successful for ${agentId.slice(0, 8)}`);
+        return true;
+      }
+    }
+    return false;
+  } catch (e) {
+    debugLog(`[Live-Tier3] Recovery failed for ${agentId.slice(0, 8)}: ${e.message}`);
+    return false;
+  }
+}
 
 function startLivenessChecker() {
   const INTERVAL = 3000;   // 3초
   const GRACE_MS = 15000;  // 등록 후 15초는 스킵 (WMI 조회 완료 전 유예)
   const MAX_MISS = 10;     // 10회 연속 실패 → DEAD (~30초로 완화)
   const missCount = new Map();
+  const recoveryAttempts = new Map(); // Track recovery attempts per agent
 
-  setInterval(() => {
+  setInterval(async () => {
     if (!agentManager) return;
     for (const agent of agentManager.getAllAgents()) {
       // Grace 기간 내 스킵
@@ -674,11 +773,17 @@ function startLivenessChecker() {
       const pid = sessionPids.get(agent.id);
       if (!pid) continue; // PID 없으면 스킵 (Grace 내에 훅으로 등록됨)
 
-      let alive = false;
-      try { process.kill(pid, 0); alive = true; } catch (e) { }
+      // Tier 1: Basic process existence check
+      let alive = await checkLivenessTier1(agent.id, pid);
+
+      // Tier 2: If Tier 1 fails, check process responsiveness
+      if (!alive) {
+        alive = await checkLivenessTier2(agent.id, pid);
+      }
 
       if (alive) {
         missCount.delete(agent.id);
+        recoveryAttempts.delete(agent.id);
         // 만약 Offline이었다가 살아난 경우 (드문 케이스)
         if (agent.state === 'Offline') {
           agentManager.updateAgent({ ...agent, state: 'Waiting' }, 'live');
@@ -690,15 +795,13 @@ function startLivenessChecker() {
         if (n === 3) {
           // 9초 정도 안보이면 일단 Offline으로 상태 변경해서 사용자에게 알림
           if (agent.state !== 'Offline') {
-            debugLog(`[Live] ${agent.id.slice(0, 8)} pid=${pid} suspicious → Offline`);
+            debugLog(`[Live-Tier1] ${agent.id.slice(0, 8)} pid=${pid} suspicious → Offline`);
             agentManager.updateAgent({ ...agent, state: 'Offline' }, 'live');
           }
         }
 
         if (n >= MAX_MISS) {
-          // 진짜로 죽은 것으로 판단
-
-          // 서브에이전트가 있는지 확인
+          // DEAD 판정: 서브에이전트가 있는지 확인
           const children = agentManager.getAllAgents().filter(a => a.parentId === agent.id);
           const hasActiveChildren = children.length > 0;
 
@@ -707,40 +810,32 @@ function startLivenessChecker() {
             if (agent.state !== 'Offline') {
               agentManager.updateAgent({ ...agent, state: 'Offline' }, 'live');
             }
-            // missCount는 유지하여 나중에 자식들 다 끝나면 삭제되게 유도할 수 있지만 
-            // 일단은 자식이 있는 동안은 삭제를 보류
-            debugLog(`[Live] ${agent.id.slice(0, 8)} pid=${pid} DEAD but keeps for active sub-agents`);
+            debugLog(`[Live-Tier1] ${agent.id.slice(0, 8)} pid=${pid} DEAD but keeps for active sub-agents`);
           } else {
-            // DEAD 판정: 세션 활성 상태 확인 후 재생성 시도
-            debugLog(`[Live] ${agent.id.slice(0, 8)} pid=${pid} DEAD → checking session activity`);
+            // Tier 3: 마지막으로 세션 활성 상태 확인 후 자동 복구 시도
+            const attempts = recoveryAttempts.get(agent.id) || 0;
 
-            // 세션 활성 상태 확인 (WMI 쿼리)
-            checkSessionActive(agent.id, pid)
-              .then(isActive => {
-                if (isActive) {
-                  debugLog(`[Live] ${agent.id.slice(0, 8)} session is active, recreating agent`);
-                  // 세션이 활성 상태면 missCount 리셋하고 상태 유지
-                  missCount.delete(agent.id);
-                  if (agent.state === 'Offline') {
-                    agentManager.updateAgent({ ...agent, state: 'Waiting' }, 'live-recreate');
-                  }
-                } else {
-                  debugLog(`[Live] ${agent.id.slice(0, 8)} session is inactive, removing agent`);
-                  missCount.delete(agent.id);
-                  sessionPids.delete(agent.id);
-                  agentManager.removeAgent(agent.id);
-                }
-              })
-              .catch(err => {
-                debugLog(`[Live] ${agent.id.slice(0, 8)} failed to check session activity: ${err.message}`);
-                // 확인 실패시 기존 동작: 제거
+            if (attempts < 2) {
+              // 최대 2번 복구 시도
+              recoveryAttempts.set(agent.id, attempts + 1);
+              debugLog(`[Live-Tier3] ${agent.id.slice(0, 8)} pid=${pid} DEAD → attempting recovery (${attempts + 1}/2)`);
+
+              const recovered = await attemptAgentRecovery(agent.id, pid);
+              if (recovered) {
+                // 복구 성공: missCount 리셋
                 missCount.delete(agent.id);
-                sessionPids.delete(agent.id);
-                agentManager.removeAgent(agent.id);
-              });
+                continue;
+              }
+            }
+
+            // 복구 실패 또는 복구 시도 초과: 제거
+            debugLog(`[Live-Tier3] ${agent.id.slice(0, 8)} pid=${pid} recovery failed → removing agent`);
+            missCount.delete(agent.id);
+            sessionPids.delete(agent.id);
+            agentManager.removeAgent(agent.id);
           }
         } else if (n > 1) {
-          debugLog(`[Live] ${agent.id.slice(0, 8)} pid=${pid} miss ${n}/${MAX_MISS}`);
+          debugLog(`[Live-Tier1] ${agent.id.slice(0, 8)} pid=${pid} miss ${n}/${MAX_MISS}`);
         }
       }
     }
@@ -829,8 +924,8 @@ app.whenReady().then(() => {
   agentManager.start();
 
   // 2. 백그라운드 서비스 시작
-  startHookServer();       // HTTP 훅 서버
-  setupClaudeHooks();      // settings.json 훅 자동 등록
+  startHookServer();       // HTTP 훅 서버 (47821 포트)
+  // setupClaudeHooks();   // settings.json 훅 자동 등록 (사용 안 함)
   startLivenessChecker();  // 프로세스 생사 확인
 
   // 3. 앱 재시작 시 기존 활성 세션 복구 시작
@@ -861,9 +956,9 @@ app.whenReady().then(() => {
         mainWindow.webContents.send('agent-added', agent);
         resizeWindowForAgents(agentManager.getAllAgents());
       }
-      // Forward to Mission Control
+      // Forward to Mission Control window
       if (missionControlWindow && !missionControlWindow.isDestroyed()) {
-        const adaptedAgent = adaptAgentForMissionControl(agent);
+        const adaptedAgent = adaptAgentToMissionControl(agent);
         missionControlWindow.webContents.send('mission-agent-added', adaptedAgent);
       }
       savePersistedState();
@@ -875,7 +970,7 @@ app.whenReady().then(() => {
         // 상태 변화로 Sub/Team이 생기면 창 크기가 달라질 수 있으므로 업데이트
         resizeWindowForAgents(agentManager.getAllAgents());
       }
-      // Forward to Mission Control
+      // Forward to Mission Control window
       if (missionControlWindow && !missionControlWindow.isDestroyed()) {
         const adaptedAgent = adaptAgentForMissionControl(agent);
         missionControlWindow.webContents.send('mission-agent-updated', adaptedAgent);
@@ -888,7 +983,7 @@ app.whenReady().then(() => {
         mainWindow.webContents.send('agent-removed', data);
         resizeWindowForAgents(agentManager.getAllAgents());
       }
-      // Forward to Mission Control
+      // Forward to Mission Control window
       if (missionControlWindow && !missionControlWindow.isDestroyed()) {
         missionControlWindow.webContents.send('mission-agent-removed', data);
       }
@@ -900,7 +995,7 @@ app.whenReady().then(() => {
         mainWindow.webContents.send('agents-cleaned', data);
         resizeWindowForAgents(agentManager.getAllAgents());
       }
-      // Forward to Mission Control
+      // Forward to Mission Control window
       if (missionControlWindow && !missionControlWindow.isDestroyed()) {
         missionControlWindow.webContents.send('mission-agent-removed', { type: 'batch', ...data });
       }
@@ -1156,3 +1251,15 @@ ipcMain.on('mission-dismiss-agent', (event, agentId) => {
     agentManager.dismissAgent(agentId);
   }
 });
+
+// Get current agents for Mission Control
+ipcMain.on('get-mission-control-agents', (event) => {
+  if (agentManager) {
+    const agents = agentManager.getAllAgents();
+    const adaptedAgents = agents.map(agent => adaptAgentToMissionControl(agent));
+    event.reply('mission-control-agents-response', adaptedAgents);
+  } else {
+    event.reply('mission-control-agents-response', []);
+  }
+});
+

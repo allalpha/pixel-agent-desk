@@ -5,54 +5,32 @@
 
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Parse URL parameters to get initial data
-function getUrlParams() {
-  const params = new URLSearchParams(window.location.search);
-  return {
-    token: params.get('token'),
-    agents: params.get('agents'),
-    source: params.get('source')
-  };
-}
-
-// Get initial agents from URL
-function getInitialAgents() {
-  try {
-    const params = getUrlParams();
-    const agentsParam = params.agents;
-    if (agentsParam) {
-      return JSON.parse(decodeURIComponent(agentsParam));
-    }
-    return [];
-  } catch (error) {
-    console.error('[MissionControlPreload] Failed to parse initial agents:', error);
-    return [];
-  }
-}
-
-// Get auth token from URL
-function getAuthToken() {
-  const params = getUrlParams();
-  return params.token || '';
-}
-
-// Clean up URL (remove sensitive data from address bar)
-function cleanUrl() {
-  if (window.history && window.history.replaceState) {
-    const cleanUrl = window.location.pathname;
-    window.history.replaceState({}, document.title, cleanUrl);
-  }
-}
-
-// Clean URL on page load
-cleanUrl();
-
 // Expose secure API to Mission Control window
 contextBridge.exposeInMainWorld('missionControlAPI', {
-  // Get initial data
-  getInitialAgents,
-  getAuthToken,
-  getSource: () => getUrlParams().source || 'unknown',
+  // Request initial agents
+  getInitialAgents: () => {
+    ipcRenderer.send('get-mission-control-agents');
+    return new Promise(resolve => {
+      const listener = (event, data) => {
+        ipcRenderer.removeListener('mission-control-agents-response', listener);
+        resolve(data);
+      };
+      ipcRenderer.on('mission-control-agents-response', listener);
+    });
+  },
+
+  // Get auth token (legacy, not used anymore)
+  getAuthToken: () => '',
+
+  // Get source (legacy, not used anymore)
+  getSource: () => 'pixel-agent-desk',
+
+  // Listen for initial data
+  onInitialData: (callback) => {
+    const listener = (event, data) => callback(data);
+    ipcRenderer.on('mission-control-initial-data', listener);
+    return () => ipcRenderer.removeListener('mission-control-initial-data', listener);
+  },
 
   // Agent event listeners
   onAgentAdded: (callback) => {
@@ -85,4 +63,4 @@ contextBridge.exposeInMainWorld('missionControlAPI', {
   }
 });
 
-console.log('[MissionControlPreload] Initialized with token:', getAuthToken().slice(0, 8) + '...');
+console.log('[MissionControlPreload] Initialized');

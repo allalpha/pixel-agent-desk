@@ -82,7 +82,7 @@ html {
   height: 64px;
   display: block;
   overflow: hidden;
-  background-image: url('./avatar_00.png');
+  background-image: url('./public/characters/avatar_0.webp');
   background-size: 432px 256px;
   background-repeat: no-repeat;
   image-rendering: pixelated;
@@ -416,7 +416,7 @@ html {
   height: 64px;
   display: block;
   overflow: hidden;
-  background-image: url('./avatar_00.png');
+  background-image: url('./public/characters/avatar_0.webp');
   background-size: 432px 256px;
   background-repeat: no-repeat;
   image-rendering: pixelated;
@@ -690,6 +690,45 @@ html {
   transform: none;
 }
 
+/* Settings Button */
+.settings-btn {
+  position: absolute;
+  top: 10px;
+  left: 110px; /* 대시보드 버튼 옆에 */
+  z-index: 10000;
+  background: rgba(30, 30, 30, 0.85);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 5px 15px;
+  font-family: 'Pretendard Variable', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.settings-btn:hover {
+  background: #ff9800;
+  border-color: #ffb74d;
+  transform: translateY(-1px);
+}
+
+.settings-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.settings-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ════════════════════════════════════════
    P0-3: Error Recovery UI Styles
 ═════════════════════════════════════════ */
@@ -877,4 +916,106 @@ html {
     background: rgba(255, 255, 255, 0.02);
     border-top-color: rgba(255, 255, 255, 0.1);
   }
+}
+
+/* ════════════════════════════════════════
+   Context Menu
+════════════════════════════════════════ */
+.context-menu {
+  position: fixed;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  padding: 8px 0;
+  min-width: 240px;
+  z-index: 10000;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  pointer-events: auto;
+  animation: contextMenuFadeIn 0.15s ease-out;
+}
+
+@keyframes contextMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.context-menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  color: #e0e0e0;
+  font-size: 14px;
+  position: relative;
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.context-menu-item:active {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.context-menu-item.danger {
+  color: #ff6b6b;
+}
+
+.context-menu-item.danger:hover {
+  background: rgba(255, 107, 107, 0.15);
+}
+
+.menu-icon {
+  font-size: 16px;
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+}
+
+.menu-label {
+  flex: 1;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 500;
+}
+
+.menu-shortcut {
+  font-size: 12px;
+  color: #888;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 12px;
+}
+
+.context-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 8px 0;
+}
+
+/* Focus styles for accessibility */
+.context-menu-item:focus {
+  outline: 2px solid #6200ea;
+  outline-offset: -2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Agent card keyboard navigation focus */
+.agent-card {
+  outline: none;
+}
+
+.agent-card:focus-visible {
+  outline: 2px solid #6200ea;
+  outline-offset: 2px;
+  border-radius: 8px;
 }

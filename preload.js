@@ -1,5 +1,13 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+// formatTime 함수 직접 정의
+function formatTime(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 // P1-5: 리스너 누적 방지 — 등록 전 기존 핸들러 제거
 function safeOn(channel, callback) {
   ipcRenderer.removeAllListeners(channel);
@@ -7,6 +15,7 @@ function safeOn(channel, callback) {
 }
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  formatTime: formatTime,
   getWorkArea: () => {
     ipcRenderer.send('get-work-area');
     return new Promise(resolve => ipcRenderer.once('work-area-response', (_, d) => resolve(d)));

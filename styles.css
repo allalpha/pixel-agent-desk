@@ -19,14 +19,15 @@ body {
   /* 배경은 클릭 통과 */
   min-width: 220px;
   min-height: 280px;
-  height: 100vh;
+  width: fit-content;
+  height: auto;
   padding-bottom: 5px;
   /* 바닥에 딱 붙지 않도록 약간의 여백 추가 */
 }
 
 html {
   overflow: hidden !important;
-  height: 100vh;
+  height: auto;
 }
 
 ::-webkit-scrollbar {

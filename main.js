@@ -29,13 +29,13 @@ function getWindowSizeForAgents(agentsOrCount) {
     count = agentsOrCount || 0;
   }
 
-  if (count <= 1) return { width: 220, height: 260 };
+  if (count <= 1) return { width: 220, height: 300 };
 
   const CARD_W = 90;
   const GAP = 10;
   const OUTER = 120 + 20; // 팀 디자인 여백 감안
-  const ROW_H = 200;
-  const BASE_H = 260;
+  const ROW_H = 240;
+  const BASE_H = 300;
   const maxCols = 10;
 
   if (agents.length > 0) {
@@ -104,7 +104,7 @@ ipcMain.on('resize-window', (e, size) => {
     // 렌더러에서 보내온 실측 사이즈 반영 (가로/세로 모두)
     // 약간의 안전 여백(Padding) 부여 및 최소 사이즈 보장
     const newWidth = Math.max(220, Math.ceil(size.width ? size.width + 30 : width));
-    const newHeight = Math.max(280, Math.ceil(size.height ? size.height + 40 : height));
+    const newHeight = Math.max(300, Math.ceil(size.height ? size.height + 40 : height));
 
     if (newWidth === width && newHeight === height) return;
 
@@ -136,7 +136,7 @@ function createWindow() {
     backgroundColor: '#00000000',
     alwaysOnTop: true,
     skipTaskbar: true,
-    resizable: false,
+    resizable: true, // programmatic setBounds works better when true
     movable: true,
     focusable: false,
     show: false,

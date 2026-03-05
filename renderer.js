@@ -314,7 +314,7 @@ function createAgentCard(agent) {
 
   return card;
 }
-
+// 에이전트 추가
 function addAgent(agent) {
   // Check if already exists
   if (document.querySelector(`[data-agent-id="${agent.id}"]`)) {
@@ -335,6 +335,8 @@ function addAgent(agent) {
 
   // Update grid layout
   updateGridLayout();
+  // Ensure we resize after adding
+  requestDynamicResize();
 
   console.log(`[Renderer] Agent added: ${agent.displayName} (${agent.id.slice(0, 8)})`);
 }
@@ -344,6 +346,8 @@ function updateAgent(agent) {
   if (!card) return;
 
   updateAgentState(agent.id, card, agent.state || 'Waiting');
+  updateGridLayout();
+  requestDynamicResize();
 }
 
 function removeAgent(data) {
@@ -362,6 +366,7 @@ function removeAgent(data) {
 
   // Update grid layout
   updateGridLayout();
+  requestDynamicResize();
 
   console.log(`[Renderer] Agent removed: ${data.displayName} (${data.id.slice(0, 8)})`);
 }
@@ -517,19 +522,25 @@ function updateGridLayout() {
 let resizeObserver = null;
 function requestDynamicResize() {
   if (!window.electronAPI || !window.electronAPI.resizeWindow) return;
-  const container = document.getElementById('agent-grid');
-  if (container) {
-    // scrollWidth/Height includes padding but not borders/margins usually
-    // offsetWidth/Height includes borders and padding
-    window.electronAPI.resizeWindow({
-      width: container.scrollWidth,
-      height: container.scrollHeight
-    });
-  }
+  const grid = document.getElementById('agent-grid');
+  if (!grid) return;
+
+  // grid-template-columns: repeat(auto-fill, 90px) causes width issues if container is small.
+  // Use scrollWidth/Height which captures the full extent of grid items.
+  const width = grid.scrollWidth;
+  const height = grid.scrollHeight;
+
+  // 레이아웃이 완전히 비어있는 상태(40-50px 이하)에서는 리사이즈 요청을 무시하여 
+  // 화면이 껌뻑거리거나 본체가 사라지는 현상을 방지합니다.
+  if (width < 100 || height < 100) return;
+
+  window.electronAPI.resizeWindow({ width, height });
 }
 
 if (window.ResizeObserver) {
   resizeObserver = new ResizeObserver(() => requestDynamicResize());
+  if (agentGrid) resizeObserver.observe(agentGrid);
+  // Also observe body just in case of font loads or other shifts
   resizeObserver.observe(document.body);
 }
 

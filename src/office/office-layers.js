@@ -1,0 +1,42 @@
+/**
+ * Office Layers — Background/foreground image loading
+ * Ported from pixel_office layerCache.ts
+ */
+
+/* eslint-disable no-unused-vars */
+
+function loadOfficeImage(src) {
+  return new Promise(function (resolve) {
+    var img = new Image();
+    img.onload = function () { resolve(img); };
+    img.onerror = function () {
+      console.warn('[OfficeLayers] Failed to load:', src);
+      var blank = new Image();
+      blank.width = 800;
+      blank.height = 800;
+      resolve(blank);
+    };
+    img.src = src;
+  });
+}
+
+var officeLayers = {
+  bgImage: null,
+  fgImage: null,
+  width: 0,
+  height: 0,
+};
+
+async function buildOfficeLayers() {
+  var ts = Date.now();
+  var bgImg = await loadOfficeImage('/public/office/map/office_bg_32.webp?t=' + ts);
+  var fgImg = await loadOfficeImage('/public/office/map/office_fg_32.webp?t=' + ts);
+
+  officeLayers.bgImage = bgImg;
+  officeLayers.fgImage = fgImg;
+  officeLayers.width = bgImg.naturalWidth || 800;
+  officeLayers.height = bgImg.naturalHeight || 800;
+
+  console.log('[OfficeLayers] bg: ' + officeLayers.width + 'x' + officeLayers.height);
+  return officeLayers;
+}

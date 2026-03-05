@@ -127,13 +127,11 @@ function createAgentCard(agent) {
   const character = document.createElement('div');
   character.className = 'agent-character';
 
-  // 에이전트 별 랜덤 아바타 지정
+  // 에이전트별 결정적 아바타 배정 (오피스 뷰와 동기화)
   let assignedAvatar = agentAvatars.get(agent.id);
-  if (!assignedAvatar && availableAvatars.length > 0) {
-    assignedAvatar = availableAvatars[Math.floor(Math.random() * availableAvatars.length)];
+  if (!assignedAvatar) {
+    assignedAvatar = avatarFromAgentId(agent.id);
     agentAvatars.set(agent.id, assignedAvatar);
-  } else if (!assignedAvatar) {
-    assignedAvatar = idleAvatar || 'avatar_0.png';
   }
 
   if (assignedAvatar) {

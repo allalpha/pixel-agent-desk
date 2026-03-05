@@ -106,7 +106,8 @@ function createWindowManager({ agentManager, sessionScanner, debugLog, adaptAgen
         }
       });
 
-      dashboardWindow.loadFile(path.join(__dirname, '..', '..', 'dashboard.html'));
+      // HTTP 서버를 통해 로드 (file:// 대신) — office 모듈 등 정적 파일 서빙 필요
+      dashboardWindow.loadURL('http://localhost:3000/');
 
       dashboardWindow.webContents.on('did-finish-load', () => {
         debugLog('[MissionControl] Window loaded successfully');

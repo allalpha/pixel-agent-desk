@@ -210,6 +210,8 @@
 
     /* Main Content */
     .main-content {
+      grid-column: 2;
+      grid-row: 2;
       padding: 24px;
       overflow-y: auto;
     }
@@ -546,6 +548,25 @@
       background: var(--color-text-muted);
     }
 
+    /* Office View */
+    .office-view {
+      grid-column: 2;
+      grid-row: 2;
+      background: #0f172a;
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #office-canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+    }
+
     /* Responsive */
     @media (max-width: 1024px) {
       .dashboard {
@@ -676,7 +697,11 @@
     <aside class="sidebar">
       <div class="nav-section">
         <div class="nav-title">메뉴</div>
-        <div class="nav-item active" data-view="overview">
+        <div class="nav-item active" data-view="office">
+          <span>🏢</span>
+          <span>오피스</span>
+        </div>
+        <div class="nav-item" data-view="overview">
           <span>📊</span>
           <span>개요</span>
         </div>
@@ -698,14 +723,30 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
-    <main class="main-content" id="mainContent">
+    <!-- Office View -->
+    <div id="officeView" class="office-view">
+      <canvas id="office-canvas"></canvas>
+    </div>
+
+    <!-- Main Content (Dashboard/Agents/Tokens) -->
+    <main class="main-content" id="mainContent" style="display:none">
       <div class="loading">
         <div class="loading-spinner"></div>
         <span>데이터를 불러오는 중...</span>
       </div>
     </main>
   </div>
+
+  <!-- Office modules (v2: avatar sync) -->
+  <script src="/src/office/office-config.js?v=2"></script>
+  <script src="/src/office/office-layers.js?v=2"></script>
+  <script src="/src/office/office-coords.js?v=2"></script>
+  <script src="/src/office/office-pathfinder.js?v=2"></script>
+  <script src="/src/office/office-sprite.js?v=2"></script>
+  <script src="/src/office/office-character.js?v=2"></script>
+  <script src="/src/office/office-renderer.js?v=2"></script>
+  <script src="/src/office/office-ui.js?v=2"></script>
+  <script src="/src/office/office-init.js?v=2"></script>
 
   <script>
     /**
@@ -724,7 +765,7 @@
         totalCost: 0
       },
       connected: false,
-      currentView: 'overview'
+      currentView: 'office'
     };
 
     // DOM 요소
@@ -766,6 +807,7 @@
         const payload = JSON.parse(event.data);
         const data = payload.data;
         updateAgent(data);
+        officeOnAgentCreated(data);
         addLiveFeed('생성', `${data.name || 'Agent'} 에이전트가 생성되었습니다`);
       });
 
@@ -773,12 +815,14 @@
         const payload = JSON.parse(event.data);
         const data = payload.data;
         updateAgent(data);
+        officeOnAgentUpdated(data);
       });
 
       eventSource.addEventListener('agent.removed', (event) => {
         const payload = JSON.parse(event.data);
         const data = payload.data;
         removeAgent(data.id);
+        officeOnAgentRemoved(data);
         addLiveFeed('제거', `에이전트가 제거되었습니다 (${data.id?.slice(0, 8)}...)`);
       });
 
@@ -891,6 +935,18 @@
      * 렌더링
      */
     function render() {
+      var officeView = document.getElementById('officeView');
+      var mainContent = elements.mainContent;
+
+      if (state.currentView === 'office') {
+        officeView.style.display = 'flex';
+        mainContent.style.display = 'none';
+        return;
+      }
+
+      officeView.style.display = 'none';
+      mainContent.style.display = 'block';
+
       if (state.currentView === 'overview') {
         renderOverview();
       } else if (state.currentView === 'agents') {
@@ -1236,9 +1292,18 @@
       const navItems = document.querySelectorAll('.nav-item');
       navItems.forEach(item => {
         item.addEventListener('click', () => {
+          var prevView = state.currentView;
           navItems.forEach(i => i.classList.remove('active'));
           item.classList.add('active');
           state.currentView = item.dataset.view;
+
+          // Office lifecycle management
+          if (state.currentView === 'office') {
+            initOffice();
+          } else if (prevView === 'office') {
+            stopOffice();
+          }
+
           render();
         });
       });
@@ -1256,8 +1321,9 @@
       // SSE 연결
       connectSSE();
 
-      // 빈 상태 렌더링 (초기)
-      renderEmpty();
+      // Start in Office view
+      initOffice();
+      render();
     }
 
     // DOM 로드 시 초기화

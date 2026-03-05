@@ -10,6 +10,11 @@
 - ✅ **PID 정확도:** transcript_path 기반 lsof PID 탐지, 크로스플랫폼 지원 (Windows PowerShell + Linux/macOS pgrep/lsof)
 - ✅ **Liveness 간소화:** 타이머 기반 정리 제거, PID 기반 즉시 판단 (2초 주기)
 - ✅ **리팩토링:** src/ 폴더 구조 정리, main.js→7개 모듈 분할, renderer.js→7개 모듈 분할
+- ✅ **Virtual Office:** 대시보드에 2D 픽셀 아트 가상 오피스 탭 추가 (9개 JS 모듈, A* 패스파인딩, 상태→존 매핑)
+
+## TODO
+- **회사 홈페이지 링크 추가:** About 다이얼로그, 트레이 메뉴, 대시보드 푸터 등에 회사 홈페이지 링크 삽입 (광고 아님, 제작자 정보 수준)
+- **오피스 폴리시:** 카메라 줌/패닝, 미니맵, 추가 이펙트 개선
 
 ## Known Issues
 - **ESC 중단 시 Thinking 상태 유지:** 사용자가 ESC로 Claude 응답을 중단하면 Stop 훅이 발생하지 않아 아바타가 Thinking 상태에 머무름. CLI 프로세스는 살아있으므로 PID 기반 Liveness Checker로도 감지 불가.
@@ -37,13 +42,14 @@ Claude CLI ──HTTP hook──▶ POST(:47821) ──hookProcessor.processHook
                                                     │
                                     ┌────────────────┤
                                     ▼                ▼
-                            AgentManager       Dashboard
-                             (SSoT)           (WebSocket)
-                                │
-                    ┌───────────┼───────────┐
-                    ▼           ▼           ▼
-              renderer/*    dashboard   sessionScanner
-             (픽셀 아바타)   (웹 UI)    (JSONL 분석)
+                            AgentManager       Dashboard Server
+                             (SSoT)           (:3000, SSE/REST)
+                                │                    │
+                    ┌───────────┼───────────┐        ├── dashboard.html
+                    ▼           ▼           ▼        │    ├── Office 탭 (Canvas 2D)
+              renderer/*    dashboard   sessionScanner│    ├── Dashboard 탭
+             (픽셀 아바타)   (웹 UI)    (JSONL 분석)  │    └── Tokens 탭
+                                                     └── src/office/* (9 모듈)
 ```
 
 ## 파일 구조 & 역할
@@ -60,20 +66,51 @@ Claude CLI ──HTTP hook──▶ POST(:47821) ──hookProcessor.processHook
 | `src/main/hookProcessor.js` | processHookEvent() switch + 헬퍼 | case 순서와 firstPreToolUseDone 로직 유지 |
 | `src/main/livenessChecker.js` | PID 탐지, transcript 기반, 2초 주기 체크 | sessionPids Map 소유 |
 | `src/main/sessionPersistence.js` | state.json 저장/복구 | agentManager, sessionPids 주입받음 |
-| `src/main/windowManager.js` | 메인윈도우, 대시보드윈도우, keep-alive | preload 경로: `path.join(__dirname, '..', 'preload.js')` |
+| `src/main/windowManager.js` | 메인윈도우, 대시보드윈도우, keep-alive | 대시보드는 `loadURL('http://localhost:3000/')` 사용 (file:// 불가) |
 | `src/main/ipcHandlers.js` | 모든 ipcMain.on/handle 등록, focusTerminalByPid | 채널명 변경 금지 |
 
 ### 렌더러 (`src/renderer/`) — 브라우저 `<script>` 태그 순서 로드
 
 | 파일 | 역할 | 수정 시 주의사항 |
 |------|------|----------------|
-| `src/renderer/config.js` | 상수, 스프라이트 설정, 상태 맵 | 글로벌 스코프 — 다른 renderer 파일에서 참조 |
+| `src/renderer/config.js` | 상수, 스프라이트 설정, 상태 맵, AVATAR_FILES | 글로벌 스코프, AVATAR_FILES는 office-config.js와 동기화 필수 |
 | `src/renderer/animationManager.js` | rAF 루프, drawFrame, playAnimation | SHEET, ANIM_SEQUENCES 참조 |
 | `src/renderer/agentCard.js` | createAgentCard, updateAgentState | stateConfig, playAnimation 참조 |
 | `src/renderer/agentGrid.js` | add/update/remove/layout/resize | agentGrid, updateAgentState 참조 |
 | `src/renderer/uiComponents.js` | 대시보드 버튼, 키보드, 컨텍스트 메뉴 | electronAPI 사용 |
 | `src/renderer/errorUI.js` | 에러 토스트 UI | electronAPI.executeRecoveryAction 사용 |
 | `src/renderer/init.js` | 초기화, visibility 핸들링, 앱 진입점 | 모든 renderer 모듈이 먼저 로드되어야 함 |
+
+### 오피스 뷰 (`src/office/`) — dashboard.html `<script>` 태그 순서 로드
+
+| 파일 | 역할 | 수정 시 주의사항 |
+|------|------|----------------|
+| `src/office/office-config.js` | 상수, 프레임맵, 좌석설정, 상태매핑, AVATAR_FILES | 글로벌 스코프, AVATAR_FILES는 renderer/config.js와 동기화 필수 |
+| `src/office/office-layers.js` | 배경/전경 이미지 로드 (buildOfficeLayers) | loadOfficeImage 재사용 |
+| `src/office/office-coords.js` | office_xy/laptop.webp 파싱 → 좌석/idle 좌표 | officeCoords 글로벌 객체 |
+| `src/office/office-pathfinder.js` | A* 패스파인딩 (collision.webp 기반) | officePathfinder 글로벌 객체 |
+| `src/office/office-sprite.js` | 스프라이트 시트 로드/드로잉/애니메이션 | officeSkinImages 글로벌 배열 |
+| `src/office/office-character.js` | 캐릭터 관리, 상태→존 매핑, 좌석배정 | officeCharacters 글로벌 객체 |
+| `src/office/office-renderer.js` | Canvas 렌더 루프, 레이어 합성, 이펙트 | officeRenderer 글로벌 객체 |
+| `src/office/office-ui.js` | 이름태그, 말풍선, 상태뱃지 | STATE_COLORS 참조 |
+| `src/office/office-init.js` | 초기화, SSE 연동, 진입점 | initOffice() 최초 1회만 실행 |
+
+### 오피스 에셋 (`public/office/`)
+
+```
+public/office/
+  map/
+    office_bg_32.webp      # 배경 이미지 (타일맵)
+    office_fg_32.webp      # 전경 이미지 (기둥 등, 캐릭터 위에 그려짐)
+    office_collision.webp  # 충돌맵 (투명=이동가능, 불투명=벽, 32px 그리드)
+    office_xy.webp         # 좌표맵 (초록=idle, 파랑=desk, 노랑=meeting)
+  ojects/
+    office_laptop.webp             # 랩탑 좌표맵 (색상별 방향)
+    office_laptop_{dir}_{state}.webp  # 4방향(front/back/left/right) x 2상태(open/close)
+public/characters/
+  avatar_0.webp ~ avatar_22.webp   # 24종 캐릭터 (432x256, 9cols x 4rows, 48x64px/frame)
+  avatar_09.webp                   # 별도 변형 (0번과 다름)
+```
 
 ### 공유 모듈 (`src/`)
 
@@ -128,6 +165,7 @@ SessionEnd → 에이전트 제거
 4. **에이전트 수 제한 없음** — 서브에이전트/팀 모드로 50개 이상도 가능. 하드 리밋 추가하지 말 것
 5. **processHookEvent() 수정 시** — `src/main/hookProcessor.js`의 switch 문 case 순서와 firstPreToolUseDone 로직 유지
 6. **문서 업데이트 규칙** — 개발 진행 후(새로운 기능 구현, 아키텍처 변경 등) 반드시 `CLAUDE.md`의 상단 진행 상태와 `docs/v3-architecture.md` 문서를 동기화/업데이트해야 함
+7. **AVATAR_FILES 동기화** — `src/renderer/config.js`와 `src/office/office-config.js`의 `AVATAR_FILES` 배열은 반드시 동일해야 함. 아바타 추가/삭제 시 양쪽 모두 업데이트. `avatarFromAgentId()`/`avatarIndexFromId()` 해시 함수도 동일 알고리즘 유지
 
 ### 피해야 할 것
 

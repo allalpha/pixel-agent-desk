@@ -21,6 +21,7 @@ const MIME_TYPES = {
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
+  '.webp': 'image/webp',
 };
 
 // Global references
@@ -229,10 +230,33 @@ function handleRequest(req, res) {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(data);
     });
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
+    return;
   }
+
+  // Static file serving: /public/* and /src/office/*
+  if (pathname.startsWith('/public/') || pathname.startsWith('/src/office/')) {
+    const safePath = pathname.replace(/\.\./g, '');
+    const filePath = path.join(__dirname, '..', safePath);
+    const ext = path.extname(filePath);
+    const mime = MIME_TYPES[ext] || 'application/octet-stream';
+
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Not Found');
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': mime,
+        'Cache-Control': 'public, max-age=3600'
+      });
+      res.end(data);
+    });
+    return;
+  }
+
+  res.writeHead(404, { 'Content-Type': 'text/plain' });
+  res.end('Not Found');
 }
 
 /**

@@ -35,6 +35,27 @@ const stateConfig = {
 const agentStates = new Map(); // agentId -> { animName, frameIdx, rafId, startTime, timerInterval, lastFormattedTime }
 
 // --- 아바타 관리 ---
+// 오피스 뷰(office-config.js)와 동일한 목록 — 동기화 필수
+const AVATAR_FILES = [
+  'avatar_0.webp','avatar_1.webp','avatar_2.webp','avatar_3.webp',
+  'avatar_4.webp','avatar_5.webp','avatar_6.webp','avatar_7.webp',
+  'avatar_8.webp','avatar_9.webp','avatar_09.webp',
+  'avatar_10.webp','avatar_11.webp','avatar_12.webp','avatar_13.webp',
+  'avatar_14.webp','avatar_15.webp','avatar_16.webp','avatar_17.webp',
+  'avatar_18.webp','avatar_19.webp','avatar_20.webp','avatar_21.webp',
+  'avatar_22.webp',
+];
 let availableAvatars = [];
 let idleAvatar = 'avatar_0.webp';
-const agentAvatars = new Map(); // agentId -> random avatar path
+const agentAvatars = new Map(); // agentId -> avatar filename
+
+/** 에이전트 ID → 결정적 아바타 파일명 (오피스 뷰와 동일 결과) */
+function avatarFromAgentId(id) {
+  let hash = 0;
+  const str = id || '';
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return AVATAR_FILES[Math.abs(hash) % AVATAR_FILES.length];
+}

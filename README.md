@@ -49,7 +49,7 @@ pixel-agent-desk/
 ├── utils.js                   # 유틸리티 함수
 ├── dashboard-server.js  # Dashboard 웹 서버 (REST API + WebSocket)
 ├── dashboard.html       # Dashboard 대시보드 페이지
-├── missionControlPreload.js   # Dashboard IPC 브릿지
+├── dashboardPreload.js   # Dashboard IPC 브릿지
 ├── index.html                 # UI 뼈대 구조
 ├── styles.css                 # 디자인 시스템
 └── package.json               # 의존성 관리

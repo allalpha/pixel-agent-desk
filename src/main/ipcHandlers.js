@@ -41,8 +41,8 @@ function registerIpcHandlers({ agentManager, sessionPids, windowManager, debugLo
     const mw = windowManager.mainWindow;
     if (!mw || mw.isDestroyed()) return;
     const { width, height, x, y } = mw.getBounds();
-    const newWidth = Math.max(220, Math.ceil(size.width ? size.width + 30 : width));
-    const newHeight = Math.max(240, Math.ceil(size.height ? size.height + 40 : height));
+    const newWidth = Math.max(150, Math.ceil(size.width ? size.width + 20 : width));
+    const newHeight = Math.max(180, Math.ceil(size.height ? size.height + 30 : height));
     if (newWidth === width && newHeight === height) return;
     const dh = newHeight - height;
     const newY = Math.max(0, y - dh);

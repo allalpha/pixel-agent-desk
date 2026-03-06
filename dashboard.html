@@ -7,35 +7,20 @@
   <title>Pixel Agent Desk Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* ── Font System ── */
-      --font-display: 'Press Start 2P', monospace;
-      --font-body: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-      --font-ui: 'Pretendard Variable', Pretendard, -apple-system, sans-serif;
-
-      /* ── Background Layers (depth) ── */
-      --color-bg-deep: #080c16;
+      --font: 'JetBrains Mono', 'Consolas', monospace;
       --color-bg: #0d1117;
       --color-card: #161b22;
-      --color-card-hover: #1c2333;
       --color-border: #30363d;
-      --color-border-active: #58a6ff;
-
-      /* ── Text ── */
       --color-text: #e6edf3;
       --color-text-muted: #7d8590;
-      --color-text-accent: #58a6ff;
-
-      /* ── Semantic ── */
       --color-primary: #58a6ff;
       --color-success: #3fb950;
       --color-warning: #d29922;
       --color-error: #f85149;
       --color-info: #a371f7;
-
-      /* ── Unified Status Colors (synced with styles.css, office-config.js) ── */
       --color-state-working: #f97316;
       --color-state-thinking: #8b5cf6;
       --color-state-waiting: #7d8590;
@@ -43,622 +28,165 @@
       --color-state-help: #f85149;
       --color-state-error: #f85149;
       --color-state-offline: #30363d;
-
-      /* ── Glow System ── */
-      --glow-working: 0 0 20px rgba(249, 115, 22, 0.25), 0 0 4px rgba(249, 115, 22, 0.4);
-      --glow-thinking: 0 0 20px rgba(139, 92, 246, 0.25), 0 0 4px rgba(139, 92, 246, 0.4);
-      --glow-done: 0 0 20px rgba(63, 185, 80, 0.2), 0 0 4px rgba(63, 185, 80, 0.3);
-      --glow-error: 0 0 20px rgba(248, 81, 73, 0.25), 0 0 4px rgba(248, 81, 73, 0.4);
-      --glow-primary: 0 0 20px rgba(88, 166, 255, 0.2), 0 0 4px rgba(88, 166, 255, 0.3);
-
-      /* ── Shadows ── */
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-      --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
-      --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.6);
-      --radius: 12px;
-      --radius-sm: 8px;
+      --radius: 8px;
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: var(--font-ui);
+      font-family: var(--font);
       background: var(--color-bg);
       color: var(--color-text);
       line-height: 1.5;
       min-height: 100vh;
     }
 
-    /* Layout */
     .dashboard {
       display: grid;
-      grid-template-columns: 280px 1fr;
-      grid-template-rows: auto 1fr auto;
+      grid-template-columns: 140px 1fr;
       min-height: 100vh;
-      gap: 0;
-    }
-
-    /* Header */
-    .header {
-      grid-column: 1 / -1;
-      background: var(--color-card);
-      border-bottom: 1px solid var(--color-border);
-      padding: 16px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: var(--shadow-sm);
-      z-index: 10;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .header-title {
-      font-family: var(--font-display);
-      font-size: 0.8rem;
-      font-weight: 400;
-      color: var(--color-text);
-      letter-spacing: 0.02em;
-      line-height: 1.8;
-    }
-
-    .header-subtitle {
-      font-family: var(--font-body);
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .header-cost {
-      font-family: var(--font-body);
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--color-warning);
-      padding: 6px 12px;
-      background: var(--color-bg-deep);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-    }
-
-    .connection-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 12px;
-      background: var(--color-bg-deep);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
-      font-family: var(--font-body);
-      font-size: 0.75rem;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--color-text-muted);
-      transition: background 0.3s ease;
-    }
-
-    .status-indicator.connected {
-      background: var(--color-success);
-      box-shadow: 0 0 8px var(--color-success);
-    }
-
-    .status-indicator.disconnected {
-      background: var(--color-error);
-    }
-
-    /* Disconnection Banner */
-    .disconnect-banner {
-      background: var(--color-error);
-      color: #fff;
-      text-align: center;
-      padding: 6px 16px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      z-index: 100;
-      grid-column: 1 / -1;
     }
 
     /* Sidebar */
     .sidebar {
       background: var(--color-card);
       border-right: 1px solid var(--color-border);
-      padding: 20px 0;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      padding: 12px 0;
+      z-index: 10;
     }
 
-    .nav-section {
-      margin-bottom: 24px;
-    }
-
-    .nav-title {
-      padding: 0 20px 8px;
-      font-family: var(--font-body);
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-text-muted);
-    }
-
-    .nav-item {
-      padding: 10px 20px;
-      cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    .sidebar-nav {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      color: var(--color-text-muted);
-      border-left: 3px solid transparent;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 8px;
     }
 
-    .nav-item:hover {
-      background: var(--color-card-hover);
-      color: var(--color-text);
-    }
-
-    .nav-item.active {
-      background: rgba(88, 166, 255, 0.08);
-      color: var(--color-primary);
-      border-left: 3px solid var(--color-primary);
-      border-right: none;
-    }
-
-    /* Status Summary (sidebar) */
-    .status-summary {
-      padding: 16px 20px;
-    }
-
-    .status-summary-title {
-      padding: 0 0 12px;
-      font-family: var(--font-body);
-      font-size: 0.65rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--color-text-muted);
-    }
-
-    .status-summary-content {
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      color: var(--color-text-muted);
-      line-height: 2;
-    }
-
-    .status-summary-content .value {
-      color: var(--color-text);
-      font-weight: 600;
-    }
-
-    /* Main Content */
-    .main-content {
-      grid-column: 2;
-      grid-row: 2;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      background: var(--color-card);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: 20px;
-      transition: all 0.2s ease;
-    }
-
-    .stat-card:hover {
-      border-color: var(--color-border-active);
-      box-shadow: var(--glow-primary);
-    }
-
-    .stat-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .stat-icon {
-      font-size: 1.5rem;
-    }
-
-    .stat-label {
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-    }
-
-    .stat-value {
-      font-family: var(--font-display);
-      font-size: 1.25rem;
-      font-weight: 400;
-      color: var(--color-text);
-      letter-spacing: 0.02em;
-    }
-
-    .stat-change {
-      font-size: 0.75rem;
-      color: var(--color-text-muted);
-      margin-top: 4px;
-    }
-
-    /* Section */
-    .section {
-      margin-bottom: 24px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .section-title {
-      font-family: var(--font-body);
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--color-text);
-    }
-
-    /* Agents Grid */
-    .agents-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 16px;
-    }
-
-    .agent-card {
-      background: var(--color-card);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: 16px;
-      transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .agent-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--color-border);
-      transition: background 0.3s ease;
-    }
-
-    .agent-card.state-working::before {
-      background: var(--color-state-working);
-    }
-
-    .agent-card.state-thinking::before {
-      background: var(--color-state-thinking);
-    }
-
-    .agent-card.state-waiting::before {
-      background: var(--color-state-waiting);
-    }
-
-    .agent-card.state-done::before {
-      background: var(--color-state-done);
-    }
-
-    .agent-card.state-help::before {
-      background: var(--color-state-help);
-    }
-
-    .agent-card.state-error::before {
-      background: var(--color-state-error);
-    }
-
-    .agent-card:hover {
-      border-color: var(--color-border-active);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-    }
-
-    /* ── A3: Per-status glow effects ── */
-    .agent-card.working {
-      box-shadow: var(--glow-working);
-      border-color: rgba(249, 115, 22, 0.4);
-    }
-
-    .agent-card.thinking {
-      box-shadow: var(--glow-thinking);
-      border-color: rgba(139, 92, 246, 0.4);
-    }
-
-    .agent-card.done {
-      box-shadow: var(--glow-done);
-      border-color: rgba(63, 185, 80, 0.3);
-    }
-
-    .agent-card.help,
-    .agent-card.error {
-      box-shadow: var(--glow-error);
-      border-color: rgba(248, 81, 73, 0.4);
-    }
-
-    .agent-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .agent-name {
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--color-text);
+    .sidebar-btn {
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-
-    .agent-id {
+      width: 100%;
+      padding: 8px 10px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius);
+      font-family: var(--font);
       font-size: 0.75rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
       color: var(--color-text-muted);
-      font-family: var(--font-body);
+      text-align: left;
     }
 
-    .agent-status {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-family: var(--font-body);
-      font-size: 0.65rem;
-      font-weight: 700;
+    .sidebar-btn:hover { background: rgba(255,255,255,0.06); color: var(--color-text); }
+    .sidebar-btn.active { background: rgba(88,166,255,0.12); color: var(--color-primary); font-weight: 600; }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--color-border);
+      margin: 10px 12px;
+    }
+
+    .sidebar-section {
+      padding: 0 12px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-section-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-bottom: 8px;
     }
 
-    .agent-status.working {
-      background: rgba(249, 115, 22, 0.2);
-      color: var(--color-state-working);
-    }
-
-    .agent-status.thinking {
-      background: rgba(139, 92, 246, 0.2);
-      color: var(--color-state-thinking);
-    }
-
-    .agent-status.waiting {
-      background: rgba(148, 163, 184, 0.2);
-      color: var(--color-state-waiting);
-    }
-
-    .agent-status.done,
-    .agent-status.completed {
-      background: rgba(34, 197, 94, 0.2);
-      color: var(--color-state-done);
-    }
-
-    .agent-status.help {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--color-state-help);
-    }
-
-    .agent-status.error {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--color-state-error);
-    }
-
-    /* Active pulsing dot */
-    .active-dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--color-state-working);
-      box-shadow: 0 0 6px var(--color-state-working);
-      animation: active-pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes active-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* Current activity indicator */
-    .current-activity {
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-    }
-
-    .current-activity.is-active {
-      color: var(--color-state-working);
-      font-weight: 600;
-    }
-
-    .agent-body {
-      margin-bottom: 12px;
-    }
-
-    .agent-row {
+    .sidebar-stat {
       display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.875rem;
-      color: var(--color-text-muted);
-      margin-bottom: 4px;
-    }
-
-    .agent-row:last-child {
-      margin-bottom: 0;
-    }
-
-    .agent-label {
-      font-weight: 500;
-      min-width: 60px;
-    }
-
-    .agent-footer {
-      display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding-top: 12px;
-      border-top: 1px solid var(--color-border);
-    }
-
-    .agent-tokens {
-      display: flex;
       align-items: center;
-      gap: 12px;
-      font-size: 0.875rem;
-    }
-
-    .token-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--color-text-muted);
-    }
-
-    .token-value {
-      font-family: var(--font-body);
-      font-weight: 600;
-      color: var(--color-text);
-    }
-
-    .agent-time {
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      color: var(--color-text-muted);
-    }
-
-    .type-badge {
-      padding: 2px 8px;
-      border-radius: 4px;
+      padding: 4px 0;
       font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-left: 8px;
     }
 
-    .type-badge.main {
-      background: rgba(59, 130, 246, 0.2);
-      color: var(--color-primary);
-    }
+    .sidebar-stat-label { color: var(--color-text-muted); }
+    .sidebar-stat-value { color: var(--color-text); font-weight: 600; }
+    .sidebar-stat-value.cost { color: var(--color-warning); }
 
-    .type-badge.subagent {
-      background: rgba(236, 72, 153, 0.2);
-      color: #ec4899;
-    }
+    .sidebar-spacer { flex: 1; }
 
-    .type-badge.teammate {
-      background: rgba(34, 211, 238, 0.2);
-      color: #22d3ee;
-    }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--color-text-muted);
-    }
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    .empty-state-title {
-      font-family: var(--font-display);
-      font-size: 0.75rem;
-      font-weight: 400;
-      color: var(--color-text);
-      margin-bottom: 12px;
-      letter-spacing: 0.02em;
-      line-height: 1.8;
-    }
-
-    .empty-state-text {
-      font-size: 1rem;
-    }
-
-    /* Loading State */
-    .loading {
+    .sidebar-bottom {
       display: flex;
       align-items: center;
-      justify-content: center;
-      padding: 60px 20px;
-      color: var(--color-text-muted);
+      gap: 6px;
+      padding: 0 12px;
     }
 
-    .loading-spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--color-border);
-      border-top-color: var(--color-primary);
+    .status-indicator {
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 12px;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--color-bg);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--color-border);
-      border-radius: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
       background: var(--color-text-muted);
+      flex-shrink: 0;
     }
 
-    /* Office View */
-    .office-view {
-      grid-column: 2;
-      grid-row: 2;
-      background: var(--color-bg-deep);
-      overflow: auto;
+    .status-indicator.connected { background: var(--color-success); }
+    .status-indicator.disconnected { background: var(--color-error); }
+
+    .sidebar-status-text {
+      font-size: 0.65rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Content Area */
+    .content-area {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Disconnect Banner */
+    .disconnect-banner {
+      background: var(--color-error);
+      color: #fff;
+      text-align: center;
+      padding: 5px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 100;
+    }
+
+    /* Office Split View */
+    .office-split {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .office-panel-left {
+      flex: 1;
+      position: relative;
+      background: #080c16;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: auto;
+    }
+
+    .office-panel-right {
+      width: 320px;
+      min-width: 320px;
+      background: var(--color-bg);
+      border-left: 1px solid var(--color-border);
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
     #office-canvas {
@@ -669,170 +197,152 @@
       max-height: 100%;
     }
 
-    /* Responsive */
-    @media (max-width: 1024px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-
-      .sidebar {
-        display: none;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .agents-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    .fade-in {
-      animation: fadeIn 0.3s ease;
-    }
-
-    /* Token Chart */
-    .token-chart {
-      background: var(--color-card);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 24px;
-    }
-
-    .chart-title {
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--color-text);
-      margin-bottom: 16px;
-    }
-
-    .chart-bars {
+    /* Standby Message */
+    .standby-message {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 16px;
+      color: var(--color-text-muted);
+      font-size: 0.8rem;
+      text-align: center;
+      flex: 1;
     }
 
-    .chart-bar {
+    .standby-message-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+
+    /* Agent Card (compact) */
+    .agent-card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-left: 3px solid var(--color-state-waiting);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+    }
+
+    .agent-card.state-working { border-left-color: var(--color-state-working); }
+    .agent-card.state-thinking { border-left-color: var(--color-state-thinking); }
+    .agent-card.state-waiting { border-left-color: var(--color-state-waiting); }
+    .agent-card.state-done { border-left-color: var(--color-state-done); }
+    .agent-card.state-help { border-left-color: var(--color-state-help); }
+    .agent-card.state-error { border-left-color: var(--color-state-error); }
+
+    .agent-header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 6px;
     }
 
-    .bar-label {
-      min-width: 120px;
-      font-family: var(--font-body);
+    .agent-name {
       font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .agent-name > span:first-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .agent-status {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.55rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    .agent-status.working { background: rgba(249,115,22,0.15); color: var(--color-state-working); }
+    .agent-status.thinking { background: rgba(139,92,246,0.15); color: var(--color-state-thinking); }
+    .agent-status.waiting { background: rgba(148,163,184,0.15); color: var(--color-state-waiting); }
+    .agent-status.done, .agent-status.completed { background: rgba(34,197,94,0.15); color: var(--color-state-done); }
+    .agent-status.help { background: rgba(239,68,68,0.15); color: var(--color-state-help); }
+    .agent-status.error { background: rgba(239,68,68,0.15); color: var(--color-state-error); }
+
+    .agent-body {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+      line-height: 1.6;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .agent-body .lbl { color: var(--color-text-muted); }
+    .agent-body .val { color: var(--color-text); }
+    .agent-body .activity-active { color: var(--color-state-working); font-weight: 600; }
+
+    .agent-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 6px;
+      border-top: 1px solid var(--color-border);
+      font-size: 0.65rem;
       color: var(--color-text-muted);
     }
 
-    .bar-track {
+    .agent-footer .val { color: var(--color-text); font-weight: 600; }
+
+    .type-badge {
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 0.55rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .type-badge.main { background: rgba(59,130,246,0.15); color: var(--color-primary); }
+    .type-badge.subagent { background: rgba(236,72,153,0.15); color: #ec4899; }
+    .type-badge.teammate { background: rgba(34,211,238,0.15); color: #22d3ee; }
+
+    /* Main Content (History) */
+    .main-content {
+      padding: 20px;
+      overflow-y: auto;
       flex: 1;
-      height: 24px;
-      background: var(--color-bg);
-      border-radius: 4px;
-      overflow: hidden;
-      position: relative;
     }
 
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--color-primary), var(--color-info));
-      border-radius: 4px;
-      transition: width 0.5s ease;
-      position: relative;
-    }
-
-    .bar-value {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--color-text);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    }
-
-    .bar-total {
-      min-width: 80px;
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--color-text);
-      text-align: right;
-    }
-
-    /* ─── Heatmap (Activity History) ─── */
-    .heatmap-container {
-      animation: fadeIn 0.3s ease;
-    }
-
+    /* Heatmap */
     .heatmap-summary {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .heatmap-summary .stat-card {
-      text-align: center;
-    }
-
-    .heatmap-summary .stat-value {
-      font-size: 1rem;
-    }
-
-    .heatmap-metrics {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-bottom: 14px;
       display: flex;
-      gap: 8px;
-      margin-bottom: 20px;
+      align-items: center;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
-    .heatmap-metric-btn {
-      padding: 6px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: 20px;
-      background: transparent;
-      color: var(--color-text-muted);
-      font-family: var(--font-body);
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .heatmap-metric-btn:hover {
-      border-color: var(--color-primary);
+    .heatmap-summary strong {
       color: var(--color-text);
+      font-weight: 600;
     }
 
-    .heatmap-metric-btn.active {
-      background: var(--color-primary);
-      border-color: var(--color-primary);
-      color: #fff;
+    .heatmap-summary-sep {
+      color: var(--color-border);
     }
 
     .heatmap-card {
       background: var(--color-card);
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 20px;
     }
 
     .heatmap-scroll {
@@ -850,7 +360,7 @@
     }
 
     .heatmap-month-label {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: var(--color-text-muted);
       grid-row: 1;
       line-height: 14px;
@@ -858,9 +368,8 @@
     }
 
     .heatmap-day-label {
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       color: var(--color-text-muted);
-      grid-row: auto;
       text-align: right;
       padding-right: 4px;
       line-height: 14px;
@@ -872,13 +381,9 @@
       height: 14px;
       border-radius: 3px;
       cursor: pointer;
-      transition: outline 0.1s ease;
     }
 
-    .heatmap-cell:hover {
-      outline: 2px solid var(--color-text-muted);
-      outline-offset: -1px;
-    }
+    .heatmap-cell:hover { outline: 2px solid var(--color-text-muted); outline-offset: -1px; }
 
     .heatmap-cell.level-0 { background: #1e293b; }
     .heatmap-cell.level-1 { background: #1e3a5f; }
@@ -892,7 +397,7 @@
       gap: 4px;
       margin-top: 12px;
       justify-content: flex-end;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--color-text-muted);
     }
 
@@ -902,17 +407,136 @@
       border-radius: 3px;
     }
 
+    /* Usage View */
+    .usage-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .usage-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .usage-toggle {
+      display: flex;
+      gap: 2px;
+    }
+
+    .usage-toggle-btn {
+      padding: 4px 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 14px;
+      background: transparent;
+      color: var(--color-text-muted);
+      font-family: var(--font);
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .usage-toggle-btn:hover { border-color: var(--color-primary); color: var(--color-text); }
+    .usage-toggle-btn.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+
+    .usage-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .usage-stat {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .usage-stat-value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .usage-stat-value.tokens { color: var(--color-primary); }
+    .usage-stat-value.cost { color: var(--color-warning); }
+
+    .usage-stat-label {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      margin-top: 4px;
+    }
+
+    .usage-chart-card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .usage-chart-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+    }
+
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 140px;
+    }
+
+    .bar-chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar-chart-bar {
+      width: 100%;
+      max-width: 36px;
+      border-radius: 3px 3px 0 0;
+      min-height: 0;
+      transition: height 0.3s ease;
+    }
+
+    .bar-chart-bar:hover { filter: brightness(1.3); }
+    .bar-chart-bar.tokens { background: var(--color-primary); }
+    .bar-chart-bar.cost { background: var(--color-warning); }
+
+    .bar-chart-value {
+      font-size: 0.5rem;
+      color: var(--color-text-muted);
+      margin-bottom: 3px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .bar-chart-label {
+      font-size: 0.5rem;
+      color: var(--color-text-muted);
+      margin-top: 5px;
+      text-align: center;
+    }
+
     .heatmap-tooltip {
       position: fixed;
       background: #1e293b;
       border: 1px solid var(--color-border);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius);
       padding: 10px 14px;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--color-text);
       pointer-events: none;
       z-index: 1000;
-      box-shadow: var(--shadow-lg);
       display: none;
       max-width: 260px;
     }
@@ -930,79 +554,126 @@
       margin-bottom: 2px;
     }
 
-    .heatmap-tooltip .tt-label {
+    .heatmap-tooltip .tt-label { color: var(--color-text-muted); }
+    .heatmap-tooltip .tt-value { font-weight: 600; }
+
+    /* Loading */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
       color: var(--color-text-muted);
     }
 
-    .heatmap-tooltip .tt-value {
-      font-weight: 600;
+    .loading-spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--color-border);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
     }
 
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+    }
+
+    .empty-state-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .office-split {
+        flex-direction: column;
+      }
+
+      .office-panel-left {
+        min-height: 300px;
+      }
+
+      .office-panel-right {
+        width: 100%;
+        min-width: unset;
+        max-height: 40vh;
+        border-left: none;
+        border-top: 1px solid var(--color-border);
+      }
+    }
   </style>
 </head>
 
 <body>
   <div class="dashboard">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <div>
-          <h1 class="header-title">🤖 Pixel Agent Desk</h1>
-          <p class="header-subtitle">AI Agent Real-time Monitoring Dashboard</p>
-        </div>
-      </div>
-      <div class="header-right">
-        <span class="header-cost" id="headerCost">💰 $0.00</span>
-        <div class="connection-status" role="status" aria-live="polite">
-          <span class="status-indicator" id="statusIndicator" aria-hidden="true"></span>
-          <span id="connectionStatus">Connecting...</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- Disconnection Banner -->
-    <div id="disconnectBanner" class="disconnect-banner" style="display:none;">
-      Disconnected — Attempting to reconnect to server...
-    </div>
-
     <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="nav-section">
-        <div class="nav-title">Menu</div>
-        <div class="nav-item active" data-view="office">
-          <span>🏢</span>
-          <span>Office</span>
+    <nav class="sidebar">
+      <div class="sidebar-nav">
+        <button class="sidebar-btn active" data-view="office">Office</button>
+        <button class="sidebar-btn" data-view="heatmap">History</button>
+        <button class="sidebar-btn" data-view="usage">Usage</button>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Session</div>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Tokens</span>
+          <span class="sidebar-stat-value" id="sidebarTokens">0</span>
         </div>
-        <div class="nav-item" data-view="agents">
-          <span>👥</span>
-          <span>Agents</span>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Cost</span>
+          <span class="sidebar-stat-value cost" id="headerCost">$0.00</span>
         </div>
-        <div class="nav-item" data-view="heatmap">
-          <span>📅</span>
-          <span>History</span>
+        <div class="sidebar-stat">
+          <span class="sidebar-stat-label">Agents</span>
+          <span class="sidebar-stat-value" id="sidebarAgentCount">0</span>
+        </div>
+      </div>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-bottom">
+        <span class="status-indicator" id="statusIndicator" aria-hidden="true"></span>
+        <span class="sidebar-status-text" id="connectionStatus">Connecting...</span>
+      </div>
+    </nav>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Disconnection Banner -->
+      <div id="disconnectBanner" class="disconnect-banner" style="display:none;">
+        Disconnected — Attempting to reconnect...
+      </div>
+
+      <!-- Office View (Canvas + Agent Panel) -->
+      <div id="officeView" class="office-split">
+        <div class="office-panel-left">
+          <canvas id="office-canvas"></canvas>
+        </div>
+        <div class="office-panel-right" id="agentPanel">
+          <div id="standbyMessage" class="standby-message">
+            <div class="standby-message-title">Standby</div>
+            <p>Agents will appear here when active.</p>
+          </div>
         </div>
       </div>
 
-      <div class="status-summary">
-        <div class="status-summary-title">Status</div>
-        <div class="status-summary-content" id="statusSummary">
-          Active: <span class="value">0</span> agents | Cost: <span class="value">$0.00</span> | Last event: <span class="value">-</span>
+      <!-- Main Content (History) -->
+      <main class="main-content" id="mainContent" style="display:none">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <span>Loading...</span>
         </div>
-      </div>
-    </aside>
-
-    <!-- Office View -->
-    <div id="officeView" class="office-view">
-      <canvas id="office-canvas"></canvas>
+      </main>
     </div>
-
-    <!-- Main Content (Dashboard/Agents/Heatmap) -->
-    <main class="main-content" id="mainContent" style="display:none">
-      <div class="loading">
-        <div class="loading-spinner"></div>
-        <span>Loading data...</span>
-      </div>
-    </main>
   </div>
 
   <!-- Heatmap Tooltip (global, position: fixed) -->
@@ -1021,61 +692,50 @@
 
   <script>
     /**
-     * Pixel Agent Desk Dashboard
-     * SSE-based real-time updates
+     * Pixel Agent Desk Dashboard — SSE-based real-time updates
      */
 
-    // State management
     const state = {
-      agents: new Map(), // sessionId -> agent data
-      stats: {
-        total: 0,
-        active: 0,
-        completed: 0,
-        totalTokens: 0,
-        totalCost: 0
-      },
+      agents: new Map(),
+      stats: { total: 0, active: 0, completed: 0, totalTokens: 0, totalCost: 0 },
       connected: false,
       currentView: localStorage.getItem('dashboard-tab') || 'office'
     };
 
-    // DOM elements
+    // Migrate legacy view values
+    if (state.currentView === 'agents') {
+      state.currentView = 'office';
+      localStorage.setItem('dashboard-tab', 'office');
+    }
+
     const elements = {
       mainContent: document.getElementById('mainContent'),
       statusIndicator: document.getElementById('statusIndicator'),
-      connectionStatus: document.getElementById('connectionStatus')
+      connectionStatus: document.getElementById('connectionStatus'),
+      agentPanel: document.getElementById('agentPanel'),
+      standbyMessage: document.getElementById('standbyMessage')
     };
 
-    /**
-     * Start SSE connection (exponential backoff reconnection)
-     */
+    // ─── SSE ───
+
     let _sseReconnectDelay = 1000;
     let _sseEventSource = null;
-    let _lastEventTime = 0;
 
     function connectSSE() {
-      // Clean up existing connection
-      if (_sseEventSource) {
-        _sseEventSource.close();
-        _sseEventSource = null;
-      }
+      if (_sseEventSource) { _sseEventSource.close(); _sseEventSource = null; }
 
-      const eventSource = new EventSource('http://localhost:3000/api/events');
+      const eventSource = new EventSource('/api/events');
       _sseEventSource = eventSource;
 
       eventSource.onopen = () => {
-        _sseReconnectDelay = 1000; // Reset delay on successful reconnection
+        _sseReconnectDelay = 1000;
         state.connected = true;
         updateConnectionStatus(true);
-        _lastEventTime = Date.now();
-        updateStatusSummary();
       };
 
       eventSource.onerror = () => {
         state.connected = false;
         updateConnectionStatus(false);
-
-        // Close EventSource and manually reconnect (exponential backoff)
         eventSource.close();
         _sseEventSource = null;
         const delay = _sseReconnectDelay;
@@ -1083,132 +743,84 @@
         setTimeout(connectSSE, delay);
       };
 
-      // Event listeners
-      eventSource.addEventListener('connected', (event) => {
-        // Load initial data
-        fetchInitialData();
-      });
+      eventSource.addEventListener('connected', () => fetchInitialData());
 
       eventSource.addEventListener('agent.created', (event) => {
-        const payload = JSON.parse(event.data);
-        const data = payload.data;
+        const data = JSON.parse(event.data).data;
         updateAgent(data);
         officeOnAgentCreated(data);
-        _lastEventTime = Date.now();
-        updateStatusSummary();
       });
 
       eventSource.addEventListener('agent.updated', (event) => {
-        const payload = JSON.parse(event.data);
-        const data = payload.data;
+        const data = JSON.parse(event.data).data;
         updateAgent(data);
         officeOnAgentUpdated(data);
       });
 
       eventSource.addEventListener('agent.removed', (event) => {
-        const payload = JSON.parse(event.data);
-        const data = payload.data;
+        const data = JSON.parse(event.data).data;
         removeAgent(data.id);
         officeOnAgentRemoved(data);
-        _lastEventTime = Date.now();
-        updateStatusSummary();
       });
     }
 
-    /**
-     * Load initial data
-     */
+    // ─── Data ───
+
     async function fetchInitialData() {
       try {
-        const response = await fetch('http://localhost:3000/api/agents');
+        const response = await fetch('/api/agents');
         const agents = await response.json();
-
-        for (const agent of agents) {
-          state.agents.set(agent.id, agent);
-        }
-
+        for (const agent of agents) state.agents.set(agent.id, agent);
         updateStats();
         render();
       } catch (error) {
         console.error('[Dashboard] Failed to load initial data:', error);
         elements.mainContent.innerHTML = `
           <div class="empty-state">
-            <div class="empty-state-icon">⚠️</div>
             <div class="empty-state-title">Connection Failed</div>
-            <div class="empty-state-text">Unable to load agent data.</div>
-            <div class="empty-state-text" style="font-size: 0.875rem; margin-top: 8px;">
-              Data will be refreshed automatically once the SSE connection is restored
-            </div>
-          </div>
-        `;
+            <p>Unable to load agent data. Will retry automatically.</p>
+          </div>`;
       }
     }
 
-    /**
-     * Update agent
-     */
     function updateAgent(agent) {
       state.agents.set(agent.id, agent);
       updateStats();
 
-      // in-place DOM update: replace existing card if found, otherwise full render
-      const existingCard = document.querySelector(`[data-card-id="${agent.id}"]`);
-      if (existingCard && state.currentView === 'agents') {
-        const temp = document.createElement('div');
-        temp.innerHTML = renderAgentCard(agent);
-        const newCard = temp.firstElementChild;
-        existingCard.replaceWith(newCard);
-      } else {
-        render();
+      if (state.currentView === 'office') {
+        const existingCard = elements.agentPanel.querySelector(`[data-card-id="${agent.id}"]`);
+        if (existingCard) {
+          const temp = document.createElement('div');
+          temp.innerHTML = renderAgentCardCompact(agent);
+          existingCard.replaceWith(temp.firstElementChild);
+        } else {
+          renderAgentPanel();
+        }
       }
     }
 
-    /**
-     * Remove agent
-     */
     function removeAgent(sessionId) {
       state.agents.delete(sessionId);
       updateStats();
 
-      // in-place DOM removal
-      const existingCard = document.querySelector(`[data-card-id="${sessionId}"]`);
-      if (existingCard) {
-        existingCard.remove();
-      }
+      const existingCard = elements.agentPanel.querySelector(`[data-card-id="${sessionId}"]`);
+      if (existingCard) existingCard.remove();
 
-      // Render empty state if no agents remain
-      if (state.agents.size === 0) {
-        render();
-      }
+      if (state.agents.size === 0) showStandbyMessage();
     }
 
-    /**
-     * Update statistics
-     */
     function updateStats() {
       const agents = Array.from(state.agents.values());
-
       state.stats.total = agents.length;
-      state.stats.active = agents.filter(a =>
-        a.status === 'working' || a.status === 'thinking'
-      ).length;
-      state.stats.completed = agents.filter(a =>
-        a.status === 'done' || a.status === 'completed'
-      ).length;
-      state.stats.totalTokens = agents.reduce((sum, a) =>
-        sum + (a.tokenUsage?.inputTokens || 0) + (a.tokenUsage?.outputTokens || 0), 0
-      );
-      state.stats.totalCost = agents.reduce((sum, a) =>
-        sum + (a.tokenUsage?.estimatedCost || 0), 0
-      );
-
-      updateStatusSummary();
+      state.stats.active = agents.filter(a => a.status === 'working' || a.status === 'thinking').length;
+      state.stats.completed = agents.filter(a => a.status === 'done' || a.status === 'completed').length;
+      state.stats.totalTokens = agents.reduce((s, a) => s + (a.tokenUsage?.inputTokens || 0) + (a.tokenUsage?.outputTokens || 0), 0);
+      state.stats.totalCost = agents.reduce((s, a) => s + (a.tokenUsage?.estimatedCost || 0), 0);
       updateHeaderCost();
     }
 
-    /**
-     * Update connection status
-     */
+    // ─── UI Updates ───
+
     function updateConnectionStatus(connected) {
       const banner = document.getElementById('disconnectBanner');
       if (connected) {
@@ -1224,39 +836,85 @@
       }
     }
 
-    /**
-     * Update sidebar status summary
-     */
-    function updateStatusSummary() {
-      const el = document.getElementById('statusSummary');
-      if (!el) return;
-
-      const active = state.stats.active;
-      const cost = state.stats.totalCost.toFixed(2);
-
-      let lastEvent = '-';
-      if (_lastEventTime > 0) {
-        const diffSec = Math.floor((Date.now() - _lastEventTime) / 1000);
-        if (diffSec < 60) lastEvent = `${diffSec}s ago`;
-        else if (diffSec < 3600) lastEvent = `${Math.floor(diffSec / 60)}m ago`;
-        else lastEvent = `${Math.floor(diffSec / 3600)}h ago`;
-      }
-
-      el.innerHTML = `Active: <span class="value">${active}</span> agents | Cost: <span class="value">$${cost}</span> | Last event: <span class="value">${lastEvent}</span>`;
-    }
-
-    /**
-     * Update header cost display
-     */
     function updateHeaderCost() {
       const el = document.getElementById('headerCost');
-      if (!el) return;
-      el.textContent = `💰 $${state.stats.totalCost.toFixed(2)}`;
+      if (el) el.textContent = `$${state.stats.totalCost.toFixed(2)}`;
+      const tokEl = document.getElementById('sidebarTokens');
+      if (tokEl) tokEl.textContent = formatNumber(state.stats.totalTokens);
+      const cntEl = document.getElementById('sidebarAgentCount');
+      if (cntEl) cntEl.textContent = state.stats.total;
     }
 
-    /**
-     * Render
-     */
+    // ─── Agent Panel ───
+
+    function renderAgentPanel() {
+      const agents = Array.from(state.agents.values());
+      if (agents.length === 0) { showStandbyMessage(); return; }
+
+      elements.standbyMessage.style.display = 'none';
+
+      // Remove cards that no longer exist
+      const currentCards = elements.agentPanel.querySelectorAll('[data-card-id]');
+      const agentIds = new Set(agents.map(a => a.id));
+      currentCards.forEach(card => {
+        if (!agentIds.has(card.dataset.cardId)) card.remove();
+      });
+
+      // Add/update cards
+      for (const agent of agents) {
+        const existingCard = elements.agentPanel.querySelector(`[data-card-id="${agent.id}"]`);
+        if (existingCard) {
+          const temp = document.createElement('div');
+          temp.innerHTML = renderAgentCardCompact(agent);
+          existingCard.replaceWith(temp.firstElementChild);
+        } else {
+          const temp = document.createElement('div');
+          temp.innerHTML = renderAgentCardCompact(agent);
+          elements.agentPanel.appendChild(temp.firstElementChild);
+        }
+      }
+    }
+
+    function showStandbyMessage() {
+      // Remove all agent cards
+      const cards = elements.agentPanel.querySelectorAll('[data-card-id]');
+      cards.forEach(card => card.remove());
+      elements.standbyMessage.style.display = '';
+    }
+
+    function renderAgentCardCompact(agent) {
+      const statusClass = getStatusClass(agent.status);
+      const statusText = getStatusText(agent.status);
+      const typeBadge = getTypeBadge(agent);
+      const elapsed = formatTime(agent.timing?.elapsed || 0);
+      const tokens = (agent.tokenUsage?.inputTokens || 0) + (agent.tokenUsage?.outputTokens || 0);
+      const cost = agent.tokenUsage?.estimatedCost || 0;
+      const model = agent.model || 'Unknown';
+      const isActive = agent.status === 'working' || agent.status === 'thinking';
+      const activity = agent.currentTool || (isActive ? statusText : '-');
+
+      return `
+        <div class="agent-card state-${statusClass}" data-card-id="${agent.id}">
+          <div class="agent-header">
+            <div class="agent-name">
+              <span>${agent.name || 'Agent'}</span>
+              ${typeBadge}
+            </div>
+            <div class="agent-status ${statusClass}" role="status">${statusText}</div>
+          </div>
+          <div class="agent-body">
+            <span class="lbl">Model:</span> <span class="val">${model}</span> &middot;
+            <span class="lbl">Activity:</span> <span class="${isActive ? 'activity-active' : 'val'}">${activity}</span>
+          </div>
+          <div class="agent-footer">
+            <span>Tokens: <span class="val">${formatNumber(tokens)}</span> &middot; $<span class="val">${cost.toFixed(2)}</span></span>
+            <span>${elapsed}</span>
+          </div>
+        </div>`;
+    }
+
+    // ─── Render ───
+
     function render() {
       const officeView = document.getElementById('officeView');
       const mainContent = elements.mainContent;
@@ -1264,306 +922,54 @@
       if (state.currentView === 'office') {
         officeView.style.display = 'flex';
         mainContent.style.display = 'none';
+        renderAgentPanel();
         return;
       }
 
       officeView.style.display = 'none';
       mainContent.style.display = 'block';
 
-      if (state.currentView === 'agents') {
-        renderAgents();
-      } else if (state.currentView === 'heatmap') {
-        renderHeatmap();
-      }
+      if (state.currentView === 'heatmap') renderHeatmap();
+      else if (state.currentView === 'usage') renderUsage();
     }
 
-    /**
-     * Render agents view (unified: stats + token chart + project groups)
-     */
-    function renderAgents() {
-      const agents = Array.from(state.agents.values());
+    // ─── Helpers ───
 
-      if (agents.length === 0) {
-        renderEmpty();
-        return;
-      }
-
-      // Sort by token usage for chart
-      const sortedAgents = [...agents].sort((a, b) => {
-        const aTokens = (a.tokenUsage?.inputTokens || 0) + (a.tokenUsage?.outputTokens || 0);
-        const bTokens = (b.tokenUsage?.inputTokens || 0) + (b.tokenUsage?.outputTokens || 0);
-        return bTokens - aTokens;
-      });
-
-      const maxTokens = Math.max(...sortedAgents.map(a =>
-        (a.tokenUsage?.inputTokens || 0) + (a.tokenUsage?.outputTokens || 0)
-      ), 1);
-
-      // Group by project
-      const groups = new Map();
-      for (const agent of agents) {
-        const project = agent.projectPath?.split('/').pop() || 'Default';
-        if (!groups.has(project)) groups.set(project, []);
-        groups.get(project).push(agent);
-      }
-
-      let projectHTML = '';
-      for (const [project, projectAgents] of groups) {
-        projectHTML += `
-          <div class="section-header">
-            <h2 class="section-title">📁 ${project}</h2>
-            <span style="color: var(--color-text-muted);">${projectAgents.length} agent(s)</span>
-          </div>
-          <div class="agents-grid" style="margin-bottom: 24px;">
-            ${projectAgents.map(agent => renderAgentCard(agent)).join('')}
-          </div>
-        `;
-      }
-
-      elements.mainContent.innerHTML = `
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon">👥</span>
-              <span class="stat-label">Total Agents</span>
-            </div>
-            <div class="stat-value">${state.stats.total}</div>
-            <div class="stat-change">Currently active: ${state.stats.active}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon">⚡</span>
-              <span class="stat-label">Active</span>
-            </div>
-            <div class="stat-value">${state.stats.active}</div>
-            <div class="stat-change">Working / Thinking</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon">✅</span>
-              <span class="stat-label">Completed</span>
-            </div>
-            <div class="stat-value">${state.stats.completed}</div>
-            <div class="stat-change">Rate: ${state.stats.total > 0 ? Math.round(state.stats.completed / state.stats.total * 100) : 0}%</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-header">
-              <span class="stat-icon">💰</span>
-              <span class="stat-label">Total Cost</span>
-            </div>
-            <div class="stat-value">$${state.stats.totalCost.toFixed(4)}</div>
-            <div class="stat-change">Tokens: ${formatNumber(state.stats.totalTokens)}</div>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">Token Usage by Agent</h2>
-          </div>
-          <div class="token-chart">
-            <div class="chart-bars">
-              ${sortedAgents.map(agent => {
-        const inputTokens = agent.tokenUsage?.inputTokens || 0;
-        const outputTokens = agent.tokenUsage?.outputTokens || 0;
-        const totalTokens = inputTokens + outputTokens;
-        const percentage = maxTokens > 0 ? (totalTokens / maxTokens * 100) : 0;
-
-        return `
-                  <div class="chart-bar">
-                    <div class="bar-label">${agent.name || agent.id.slice(0, 8)}</div>
-                    <div class="bar-track">
-                      <div class="bar-fill" style="width: ${percentage}%">
-                        <span class="bar-value">${formatNumber(totalTokens)}</span>
-                      </div>
-                    </div>
-                    <div class="bar-total">$${(agent.tokenUsage?.estimatedCost || 0).toFixed(4)}</div>
-                  </div>
-                `;
-      }).join('')}
-            </div>
-          </div>
-        </div>
-
-        <div class="section">
-          ${projectHTML}
-        </div>
-      `;
-    }
-
-    /**
-     * Render agent card
-     */
-    function renderAgentCard(agent) {
-      const statusClass = getStatusClass(agent.status);
-      const statusText = getStatusText(agent.status);
-      const typeBadge = getTypeBadge(agent);
-      const elapsed = formatTime(agent.timing?.elapsed || 0);
-      const inputTokens = agent.tokenUsage?.inputTokens || 0;
-      const outputTokens = agent.tokenUsage?.outputTokens || 0;
-      const totalTokens = inputTokens + outputTokens;
-      const cost = agent.tokenUsage?.estimatedCost || 0;
-      const project = agent.projectPath?.split('/').pop() || 'Default';
-      const model = agent.model || 'Unknown';
-      const isActive = agent.status === 'working' || agent.status === 'thinking';
-      const activeDot = isActive ? '<span class="active-dot"></span>' : '';
-      const currentActivity = agent.currentTool || (isActive ? statusText : '-');
-
-      return `
-        <div class="agent-card ${statusClass}" data-card-id="${agent.id}">
-          <div class="agent-header">
-            <div class="agent-name">
-              ${activeDot}
-              <span>${agent.name || 'Agent'}</span>
-              ${typeBadge}
-            </div>
-            <div class="agent-status ${statusClass}" role="status" aria-label="Status: ${statusText}">${statusText}</div>
-          </div>
-          <div class="agent-body">
-            <div class="agent-row">
-              <span class="agent-label">ID:</span>
-              <span class="agent-id">${agent.id.slice(0, 8)}...</span>
-            </div>
-            <div class="agent-row">
-              <span class="agent-label">Project:</span>
-              <span>${project}</span>
-            </div>
-            <div class="agent-row">
-              <span class="agent-label">Model:</span>
-              <span>${model}</span>
-            </div>
-            <div class="agent-row">
-              <span class="agent-label">Activity:</span>
-              <span class="current-activity ${isActive ? 'is-active' : ''}">${currentActivity}</span>
-            </div>
-          </div>
-          <div class="agent-footer">
-            <div class="agent-tokens">
-              <div class="token-item">
-                <span>📥</span>
-                <span class="token-value">${formatNumber(inputTokens)}</span>
-              </div>
-              <div class="token-item">
-                <span>📤</span>
-                <span class="token-value">${formatNumber(outputTokens)}</span>
-              </div>
-              <div class="token-item">
-                <span>💰</span>
-                <span class="token-value">$${cost.toFixed(4)}</span>
-              </div>
-            </div>
-            <div class="agent-time">⏱️ ${elapsed}</div>
-          </div>
-        </div>
-      `;
-    }
-
-    /**
-     * Render empty state
-     */
-    function renderEmpty() {
-      elements.mainContent.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state-icon">😴</div>
-          <div class="empty-state-title">Standby</div>
-          <div class="empty-state-text">No agents are currently working.</div>
-          <div class="empty-state-text" style="font-size: 0.875rem; margin-top: 8px;">
-            Agents will appear automatically when you start a task in Claude CLI
-          </div>
-        </div>
-      `;
-    }
-
-    /**
-     * Get status CSS class
-     */
     function getStatusClass(status) {
-      const statusMap = {
-        'working': 'working',
-        'thinking': 'thinking',
-        'waiting': 'waiting',
-        'done': 'done',
-        'completed': 'done',
-        'help': 'help',
-        'error': 'error'
-      };
-      return statusMap[status] || 'waiting';
+      return { working:'working', thinking:'thinking', waiting:'waiting', done:'done', completed:'done', help:'help', error:'error' }[status] || 'waiting';
     }
 
-    /**
-     * Get status display text
-     */
     function getStatusText(status) {
-      const statusMap = {
-        'working': 'Working',
-        'thinking': 'Thinking',
-        'waiting': 'Waiting',
-        'done': 'Done',
-        'completed': 'Done',
-        'help': 'Needs Help',
-        'error': 'Error'
-      };
-      return statusMap[status] || status;
+      return { working:'Working', thinking:'Thinking', waiting:'Waiting', done:'Done', completed:'Done', help:'Needs Help', error:'Error' }[status] || status;
     }
 
-    /**
-     * Get type badge
-     */
     function getTypeBadge(agent) {
-      if (agent.metadata?.isSubagent) {
-        return '<span class="type-badge subagent">Sub</span>';
-      } else if (agent.metadata?.isTeammate) {
-        return '<span class="type-badge teammate">Team</span>';
-      } else {
-        return '<span class="type-badge main">Main</span>';
-      }
+      if (agent.metadata?.isSubagent) return '<span class="type-badge subagent">Sub</span>';
+      if (agent.metadata?.isTeammate) return '<span class="type-badge teammate">Team</span>';
+      return '<span class="type-badge main">Main</span>';
     }
 
-    /**
-     * Format time
-     */
     function formatTime(ms) {
-      const totalSeconds = Math.floor(ms / 1000);
-      const hours = Math.floor(totalSeconds / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      if (hours > 0) {
-        return `${hours}h ${minutes}m`;
-      } else if (minutes > 0) {
-        return `${minutes}m ${seconds}s`;
-      } else {
-        return `${seconds}s`;
-      }
+      const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      if (h > 0) return `${h}h ${m}m`;
+      if (m > 0) return `${m}m ${sec}s`;
+      return `${sec}s`;
     }
 
-    /**
-     * Format number
-     */
     function formatNumber(num) {
-      if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-      } else if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'K';
-      }
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
       return num.toString();
     }
 
-    // ─── Heatmap (Activity History) ───
+    // ─── Heatmap ───
 
-    /** Heatmap state */
-    const heatmapState = {
-      data: null,       // { days: { "YYYY-MM-DD": {...} }, lastScan }
-      metric: 'sessions', // sessions | tokens | cost | toolUses
-      loading: false,
-    };
+    const heatmapState = { data: null, loading: false };
 
-    /**
-     * Fetch heatmap data
-     */
     async function fetchHeatmapData() {
       heatmapState.loading = true;
       try {
-        const res = await fetch('http://localhost:3000/api/heatmap?days=365');
+        const res = await fetch('/api/heatmap?days=365');
         heatmapState.data = await res.json();
       } catch (e) {
         console.error('[Heatmap] fetch failed:', e);
@@ -1572,113 +978,189 @@
       heatmapState.loading = false;
     }
 
-    /**
-     * Render heatmap view
-     */
-    async function renderHeatmap() {
+    async function ensureHeatmapData() {
       if (!heatmapState.data) {
-        elements.mainContent.innerHTML = `
-          <div class="loading">
-            <div class="loading-spinner"></div>
-            <span>Loading activity history...</span>
-          </div>`;
+        elements.mainContent.innerHTML = `<div class="loading"><div class="loading-spinner"></div><span>Loading...</span></div>`;
         await fetchHeatmapData();
       }
+    }
+
+    async function renderHeatmap() {
+      await ensureHeatmapData();
 
       const days = heatmapState.data.days || {};
-      const metric = heatmapState.metric;
-
-      // Calculate summary statistics
       const summary = calculateHeatmapSummary(days);
-
-      // Metric buttons
-      const metrics = [
-        { key: 'sessions', label: 'Sessions' },
-        { key: 'tokens', label: 'Tokens' },
-        { key: 'cost', label: 'Cost' },
-        { key: 'toolUses', label: 'Tool Uses' },
-      ];
 
       elements.mainContent.innerHTML = `
         <div class="heatmap-container">
           <div class="heatmap-summary">
-            <div class="stat-card">
-              <div class="stat-header"><span class="stat-icon">📊</span><span class="stat-label">Total Sessions</span></div>
-              <div class="stat-value">${summary.totalSessions}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-header"><span class="stat-icon">📆</span><span class="stat-label">Active Days</span></div>
-              <div class="stat-value">${summary.activeDays}</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-header"><span class="stat-icon">🔥</span><span class="stat-label">Current Streak</span></div>
-              <div class="stat-value">${summary.currentStreak}</div>
-              <div class="stat-change">Longest: ${summary.longestStreak} days</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-header"><span class="stat-icon">💰</span><span class="stat-label">Total Cost</span></div>
-              <div class="stat-value">$${summary.totalCost.toFixed(2)}</div>
-            </div>
+            <span><strong>${summary.totalSessions}</strong> sessions</span>
+            <span class="heatmap-summary-sep">&middot;</span>
+            <span><strong>${summary.activeDays}</strong> days active</span>
+            <span class="heatmap-summary-sep">&middot;</span>
+            <span>streak <strong>${summary.currentStreak}</strong> (best ${summary.longestStreak})</span>
           </div>
-
-          <div class="heatmap-metrics">
-            ${metrics.map(m => `
-              <button class="heatmap-metric-btn ${metric === m.key ? 'active' : ''}"
-                      onclick="changeHeatmapMetric('${m.key}')">${m.label}</button>
-            `).join('')}
-          </div>
-
           <div class="heatmap-card">
             <div class="heatmap-scroll">
               <div class="heatmap-grid" id="heatmapGrid"></div>
             </div>
             <div class="heatmap-legend">
               <span>Less</span>
-              <div class="heatmap-legend-cell level-0" style="background:#1e293b"></div>
-              <div class="heatmap-legend-cell level-1" style="background:#1e3a5f"></div>
-              <div class="heatmap-legend-cell level-2" style="background:#1d4ed8"></div>
-              <div class="heatmap-legend-cell level-3" style="background:#3b82f6"></div>
-              <div class="heatmap-legend-cell level-4" style="background:#60a5fa"></div>
+              <div class="heatmap-legend-cell" style="background:#1e293b"></div>
+              <div class="heatmap-legend-cell" style="background:#1e3a5f"></div>
+              <div class="heatmap-legend-cell" style="background:#1d4ed8"></div>
+              <div class="heatmap-legend-cell" style="background:#3b82f6"></div>
+              <div class="heatmap-legend-cell" style="background:#60a5fa"></div>
               <span>More</span>
             </div>
           </div>
         </div>`;
 
-      buildHeatmapGrid(days, metric);
+      buildHeatmapGrid(days, 'sessions');
       attachHeatmapTooltips(days);
     }
 
-    /**
-     * Build heatmap grid (53 weeks x 7 days)
-     */
-    function buildHeatmapGrid(days, metric) {
-      const grid = document.getElementById('heatmapGrid');
-      if (!grid) return;
+    // ─── Usage View ───
 
-      // 53 weeks (371 days) from today
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dayOfWeek = today.getDay(); // 0=Sun
+    const usageState = { chartMode: 'weeks' };
 
-      // Start date: Sunday 52 weeks ago
-      const startDate = new Date(today);
-      startDate.setDate(today.getDate() - (52 * 7 + dayOfWeek));
+    async function renderUsage() {
+      await ensureHeatmapData();
 
-      // Value extraction function per metric
-      const getValue = (dayData) => {
-        if (!dayData) return 0;
+      const days = heatmapState.data.days || {};
+      const mode = usageState.chartMode;
+
+      // Aggregate totals
+      let totalTokens = 0, totalCost = 0, totalSessions = 0, totalToolUses = 0;
+      for (const d of Object.values(days)) {
+        totalTokens += (d.inputTokens || 0) + (d.outputTokens || 0);
+        totalCost += d.estimatedCost || 0;
+        totalSessions += d.sessions || 0;
+        totalToolUses += d.toolUses || 0;
+      }
+
+      const tokenChartData = aggregateChartData(days, 'tokens', mode);
+      const costChartData = aggregateChartData(days, 'cost', mode);
+
+      elements.mainContent.innerHTML = `
+        <div class="usage-header">
+          <span class="usage-title">Token & Cost Usage</span>
+          <div class="usage-toggle">
+            <button class="usage-toggle-btn ${mode === 'weeks' ? 'active' : ''}" data-usage-mode="weeks">12 Weeks</button>
+            <button class="usage-toggle-btn ${mode === 'months' ? 'active' : ''}" data-usage-mode="months">12 Months</button>
+          </div>
+        </div>
+        <div class="usage-stats">
+          <div class="usage-stat">
+            <div class="usage-stat-value tokens">${formatNumber(totalTokens)}</div>
+            <div class="usage-stat-label">Total Tokens</div>
+          </div>
+          <div class="usage-stat">
+            <div class="usage-stat-value cost">$${totalCost.toFixed(2)}</div>
+            <div class="usage-stat-label">Total Cost</div>
+          </div>
+          <div class="usage-stat">
+            <div class="usage-stat-value tokens">${totalSessions}</div>
+            <div class="usage-stat-label">Sessions</div>
+          </div>
+          <div class="usage-stat">
+            <div class="usage-stat-value tokens">${formatNumber(totalToolUses)}</div>
+            <div class="usage-stat-label">Tool Uses</div>
+          </div>
+        </div>
+        <div class="usage-chart-card">
+          <div class="usage-chart-title">Tokens</div>
+          ${renderBarChart(tokenChartData, 'tokens')}
+        </div>
+        <div class="usage-chart-card">
+          <div class="usage-chart-title">Cost ($)</div>
+          ${renderBarChart(costChartData, 'cost')}
+        </div>`;
+
+      elements.mainContent.querySelector('.usage-toggle').addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-usage-mode]');
+        if (!btn) return;
+        usageState.chartMode = btn.dataset.usageMode;
+        renderUsage();
+      });
+    }
+
+    function aggregateChartData(days, metric, mode) {
+      const getValue = (d) => {
+        if (!d) return 0;
         switch (metric) {
-          case 'sessions': return dayData.sessions || 0;
-          case 'tokens': return (dayData.inputTokens || 0) + (dayData.outputTokens || 0);
-          case 'cost': return dayData.estimatedCost || 0;
-          case 'toolUses': return dayData.toolUses || 0;
+          case 'tokens': return (d.inputTokens || 0) + (d.outputTokens || 0);
+          case 'cost': return d.estimatedCost || 0;
           default: return 0;
         }
       };
 
-      // Collect all date values (for level calculation)
-      const allValues = [];
-      const cellData = [];
+      const result = [];
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (mode === 'weeks') {
+        for (let w = 11; w >= 0; w--) {
+          let sum = 0;
+          const weekEnd = new Date(today);
+          weekEnd.setDate(today.getDate() - w * 7);
+          const weekStart = new Date(weekEnd);
+          weekStart.setDate(weekEnd.getDate() - 6);
+          const d = new Date(weekStart);
+          while (d <= weekEnd) {
+            sum += getValue(days[d.toISOString().slice(0, 10)]);
+            d.setDate(d.getDate() + 1);
+          }
+          result.push({ label: `W${12 - w}`, value: sum });
+        }
+      } else {
+        const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        for (let m = 11; m >= 0; m--) {
+          const target = new Date(today.getFullYear(), today.getMonth() - m, 1);
+          const year = target.getFullYear(), month = target.getMonth();
+          const dim = new Date(year, month + 1, 0).getDate();
+          let sum = 0;
+          for (let day = 1; day <= dim; day++) {
+            sum += getValue(days[`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`]);
+          }
+          result.push({ label: monthNames[month], value: sum });
+        }
+      }
+      return result;
+    }
+
+    function renderBarChart(chartData, colorClass) {
+      const maxValue = Math.max(...chartData.map(d => d.value), 1);
+      const bars = chartData.map(d => {
+        const height = d.value > 0 ? Math.max(2, Math.round((d.value / maxValue) * 130)) : 0;
+        const display = d.value >= 1000000 ? (d.value / 1000000).toFixed(1) + 'M'
+          : d.value >= 1000 ? (d.value / 1000).toFixed(1) + 'K'
+          : d.value % 1 !== 0 ? d.value.toFixed(2)
+          : d.value || '';
+        return `<div class="bar-chart-col">
+          <div class="bar-chart-value">${display}</div>
+          <div class="bar-chart-bar ${colorClass}" style="height:${height}px"></div>
+          <div class="bar-chart-label">${d.label}</div>
+        </div>`;
+      }).join('');
+      return `<div class="bar-chart">${bars}</div>`;
+    }
+
+    // ─── Heatmap Grid ───
+
+    function buildHeatmapGrid(days) {
+      const grid = document.getElementById('heatmapGrid');
+      if (!grid) return;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dayOfWeek = today.getDay();
+      const startDate = new Date(today);
+      startDate.setDate(today.getDate() - (52 * 7 + dayOfWeek));
+
+      const getValue = (d) => d ? (d.sessions || 0) : 0;
+
+      const allValues = [], cellData = [];
       const d = new Date(startDate);
       while (d <= today) {
         const dateStr = d.toISOString().slice(0, 10);
@@ -1688,11 +1170,9 @@
         d.setDate(d.getDate() + 1);
       }
 
-      // Calculate percentile-based levels from non-zero values only
       const nonZero = allValues.filter(v => v > 0).sort((a, b) => a - b);
       const getLevel = (val) => {
-        if (val === 0) return 0;
-        if (nonZero.length === 0) return 0;
+        if (val === 0 || nonZero.length === 0) return 0;
         const p25 = nonZero[Math.floor(nonZero.length * 0.25)] || 1;
         const p50 = nonZero[Math.floor(nonZero.length * 0.50)] || 1;
         const p75 = nonZero[Math.floor(nonZero.length * 0.75)] || 1;
@@ -1702,19 +1182,11 @@
         return 4;
       };
 
-      // Day labels (first column)
       const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
       grid.innerHTML = '';
 
-      // Array for month labels (week index -> month name)
-      const weekMonths = new Map();
-      let cellIdx = 0;
-
-      // First column: day labels
-      // Month label placeholder (empty)
       const monthSpacer = document.createElement('div');
       monthSpacer.className = 'heatmap-month-label';
-      monthSpacer.textContent = '';
       grid.appendChild(monthSpacer);
 
       for (let row = 0; row < 7; row++) {
@@ -1724,48 +1196,33 @@
         grid.appendChild(label);
       }
 
-      // Generate weekly columns
-      let currentWeek = -1;
       let lastMonth = -1;
-
       for (let i = 0; i < cellData.length; i++) {
         const cell = cellData[i];
         const cellDate = new Date(cell.date + 'T00:00:00');
-        // Add month label when week changes
+
         if (cell.dayOfWeek === 0 || i === 0) {
-          currentWeek++;
           const monthIdx = cellDate.getMonth();
           const monthLabel = document.createElement('div');
           monthLabel.className = 'heatmap-month-label';
-
-          // Show label only on the first week of a new month
           if (monthIdx !== lastMonth) {
-            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            monthLabel.textContent = monthNames[monthIdx];
+            monthLabel.textContent = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][monthIdx];
             lastMonth = monthIdx;
           }
           grid.appendChild(monthLabel);
         }
 
-        // Create cell
-        const level = getLevel(cell.value);
         const div = document.createElement('div');
-        div.className = `heatmap-cell level-${level}`;
+        div.className = `heatmap-cell level-${getLevel(cell.value)}`;
         div.dataset.date = cell.date;
         grid.appendChild(div);
       }
     }
 
-    /**
-     * Heatmap tooltip events
-     */
     function attachHeatmapTooltips(days) {
       const tooltip = document.getElementById('heatmapTooltip');
-      if (!tooltip) return;
-
       const grid = document.getElementById('heatmapGrid');
-      if (!grid) return;
+      if (!tooltip || !grid) return;
 
       grid.addEventListener('mouseover', (e) => {
         const cell = e.target.closest('.heatmap-cell');
@@ -1774,20 +1231,19 @@
         const dateStr = cell.dataset.date;
         const dayData = days[dateStr];
         const dateObj = new Date(dateStr + 'T00:00:00');
-        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
         const formatted = `${dateStr} (${dayNames[dateObj.getDay()]})`;
 
         let html = `<div class="tt-date">${formatted}</div>`;
         if (dayData) {
           html += `
             <div class="tt-row"><span class="tt-label">Sessions</span><span class="tt-value">${dayData.sessions || 0}</span></div>
-            <div class="tt-row"><span class="tt-label">User Messages</span><span class="tt-value">${dayData.userMessages || 0}</span></div>
-            <div class="tt-row"><span class="tt-label">Assistant Messages</span><span class="tt-value">${dayData.assistantMessages || 0}</span></div>
+            <div class="tt-row"><span class="tt-label">User Msgs</span><span class="tt-value">${dayData.userMessages || 0}</span></div>
+            <div class="tt-row"><span class="tt-label">Assist Msgs</span><span class="tt-value">${dayData.assistantMessages || 0}</span></div>
             <div class="tt-row"><span class="tt-label">Tool Uses</span><span class="tt-value">${dayData.toolUses || 0}</span></div>
-            <div class="tt-row"><span class="tt-label">Input Tokens</span><span class="tt-value">${formatNumber(dayData.inputTokens || 0)}</span></div>
-            <div class="tt-row"><span class="tt-label">Output Tokens</span><span class="tt-value">${formatNumber(dayData.outputTokens || 0)}</span></div>
-            <div class="tt-row"><span class="tt-label">Est. Cost</span><span class="tt-value">$${(dayData.estimatedCost || 0).toFixed(4)}</span></div>`;
-          if (dayData.projects && dayData.projects.length > 0) {
+            <div class="tt-row"><span class="tt-label">Tokens</span><span class="tt-value">${formatNumber((dayData.inputTokens || 0) + (dayData.outputTokens || 0))}</span></div>
+            <div class="tt-row"><span class="tt-label">Cost</span><span class="tt-value">$${(dayData.estimatedCost || 0).toFixed(2)}</span></div>`;
+          if (dayData.projects?.length > 0) {
             html += `<div class="tt-row"><span class="tt-label">Projects</span><span class="tt-value">${dayData.projects.join(', ')}</span></div>`;
           }
         } else {
@@ -1801,7 +1257,6 @@
         tooltip.style.left = (rect.left + rect.width / 2) + 'px';
         tooltip.style.top = (rect.top - tooltip.offsetHeight - 8) + 'px';
 
-        // Adjust if tooltip goes off-screen
         const ttRect = tooltip.getBoundingClientRect();
         if (ttRect.left < 0) tooltip.style.left = '8px';
         if (ttRect.right > window.innerWidth) tooltip.style.left = (window.innerWidth - ttRect.width - 8) + 'px';
@@ -1809,19 +1264,12 @@
       });
 
       grid.addEventListener('mouseout', (e) => {
-        const cell = e.target.closest('.heatmap-cell');
-        if (!cell) return;
-        tooltip.style.display = 'none';
+        if (e.target.closest('.heatmap-cell')) tooltip.style.display = 'none';
       });
     }
 
-    /**
-     * Calculate heatmap summary statistics
-     */
     function calculateHeatmapSummary(days) {
-      let totalSessions = 0;
-      let activeDays = 0;
-      let totalCost = 0;
+      let totalSessions = 0, activeDays = 0, totalCost = 0;
       const dates = Object.keys(days).sort();
 
       for (const date of dates) {
@@ -1831,37 +1279,24 @@
         if ((d.sessions || 0) > 0) activeDays++;
       }
 
-      // Calculate streak (days) -- from today backwards
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
       let currentStreak = 0;
       const check = new Date(today);
       while (true) {
-        const dateStr = check.toISOString().slice(0, 10);
-        const d = days[dateStr];
-        if (d && (d.sessions || 0) > 0) {
-          currentStreak++;
-          check.setDate(check.getDate() - 1);
-        } else {
-          break;
-        }
+        const ds = check.toISOString().slice(0, 10);
+        if (days[ds] && (days[ds].sessions || 0) > 0) { currentStreak++; check.setDate(check.getDate() - 1); }
+        else break;
       }
 
-      // Longest streak (date continuity check)
-      let longestStreak = 0;
-      let streak = 0;
+      let longestStreak = 0, streak = 0;
       if (dates.length > 0) {
         const start = new Date(dates[0] + 'T00:00:00');
         const end = new Date(dates[dates.length - 1] + 'T00:00:00');
         const d2 = new Date(start);
         while (d2 <= end) {
           const ds = d2.toISOString().slice(0, 10);
-          if (days[ds] && (days[ds].sessions || 0) > 0) {
-            streak++;
-            if (streak > longestStreak) longestStreak = streak;
-          } else {
-            streak = 0;
-          }
+          if (days[ds] && (days[ds].sessions || 0) > 0) { streak++; if (streak > longestStreak) longestStreak = streak; }
+          else streak = 0;
           d2.setDate(d2.getDate() + 1);
         }
       }
@@ -1869,53 +1304,30 @@
       return { totalSessions, activeDays, currentStreak, longestStreak, totalCost };
     }
 
-    /**
-     * Switch heatmap metric
-     */
-    function changeHeatmapMetric(metric) {
-      heatmapState.metric = metric;
-      renderHeatmap();
-    }
-    // Global access (called from onclick)
-    window.changeHeatmapMetric = changeHeatmapMetric;
+    // ─── Navigation ───
 
-    /**
-     * Initialize navigation
-     */
-    // Per-tab scroll position storage
     const _tabScrollPositions = {};
 
     function initNavigation() {
-      const navItems = document.querySelectorAll('.nav-item');
-      navItems.forEach(item => {
-        item.addEventListener('click', () => {
+      const navBtns = document.querySelectorAll('.sidebar-btn');
+      navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
           const prevView = state.currentView;
 
-          // Save scroll position of previous tab
-          if (elements.mainContent) {
-            _tabScrollPositions[prevView] = elements.mainContent.scrollTop;
-          }
+          if (elements.mainContent) _tabScrollPositions[prevView] = elements.mainContent.scrollTop;
 
-          navItems.forEach(i => i.classList.remove('active'));
-          item.classList.add('active');
-          state.currentView = item.dataset.view;
+          navBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.currentView = btn.dataset.view;
           localStorage.setItem('dashboard-tab', state.currentView);
 
-          // Office lifecycle management
-          if (state.currentView === 'office') {
-            initOffice();
-          } else if (prevView === 'office') {
-            stopOffice();
-          }
+          if (state.currentView === 'office') initOffice();
+          else if (prevView === 'office') stopOffice();
 
-          // Refresh data when entering heatmap tab
-          if (state.currentView === 'heatmap') {
-            heatmapState.data = null; // Force re-fetch
-          }
+          if (state.currentView === 'heatmap' || state.currentView === 'usage') heatmapState.data = null;
 
           render();
 
-          // Restore scroll position for new tab
           if (elements.mainContent && _tabScrollPositions[state.currentView]) {
             elements.mainContent.scrollTop = _tabScrollPositions[state.currentView];
           }
@@ -1923,46 +1335,25 @@
       });
     }
 
-    /**
-     * Initialize
-     */
-    function init() {
-      // Legacy tab migration: overview/tokens -> agents
-      const savedTab = localStorage.getItem('dashboard-tab');
-      if (savedTab === 'overview' || savedTab === 'tokens') {
-        localStorage.setItem('dashboard-tab', 'agents');
-        state.currentView = 'agents';
-      }
+    // ─── Init ───
 
-      // Initialize navigation
+    function init() {
       initNavigation();
 
-      // Restore saved tab -- sync nav item active class
-      const navItems = document.querySelectorAll('.nav-item');
-      navItems.forEach(i => {
-        if (i.dataset.view === state.currentView) i.classList.add('active');
-        else i.classList.remove('active');
+      // Sync saved tab to button state
+      const navBtns = document.querySelectorAll('.sidebar-btn');
+      navBtns.forEach(b => {
+        if (b.dataset.view === state.currentView) b.classList.add('active');
+        else b.classList.remove('active');
       });
 
-      // SSE connection
       connectSSE();
-
-      // Initialize for current view
-      if (state.currentView === 'office') {
-        initOffice();
-      }
+      if (state.currentView === 'office') initOffice();
       render();
-
-      // Status summary refresh timer (relative time update)
-      setInterval(updateStatusSummary, 30000);
     }
 
-    // Initialize on DOM load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', init);
-    } else {
-      init();
-    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
   </script>
 </body>
 

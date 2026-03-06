@@ -96,9 +96,9 @@ function drawFrameOn(el, frameIndex) {
   if (!el) return;
   const col = frameIndex % SHEET.cols;
   const row = Math.floor(frameIndex / SHEET.cols);
-  // Single character is scaled 1.5x (72x96, bg 648x384)
-  const fw = 72;
-  const fh = 96;
+  // Single character at 1x native (48x64, bg 432x256)
+  const fw = 48;
+  const fh = 64;
   el.style.backgroundPosition = `${col * -fw}px ${row * -fh}px`;
 }
 

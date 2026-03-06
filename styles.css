@@ -25,8 +25,8 @@ body {
   -webkit-app-region: no-drag;
   pointer-events: none;
   /* Click-through background */
-  min-width: 220px;
-  min-height: 220px;
+  min-width: 150px;
+  min-height: 150px;
   width: fit-content;
   height: auto;
   padding-bottom: 2px;
@@ -57,7 +57,7 @@ html {
 .agent-grid.has-multiple {
   display: grid;
   /* Supports up to 10 agents horizontally, width adjusts based on agent count */
-  grid-template-columns: repeat(auto-fill, 90px);
+  grid-template-columns: repeat(auto-fill, 80px);
   grid-auto-rows: auto;
   gap: 10px 10px;
   justify-content: center;
@@ -81,15 +81,15 @@ html {
   /* Avatar area detects clicks */
 }
 
-/* Character sprite (single agent: 1.5x enlarged hero mode) */
+/* Character sprite (single agent: 1x native size) */
 .character {
-  width: 72px;
-  height: 96px;
+  width: 48px;
+  height: 64px;
   display: block;
   overflow: hidden;
   background-image: url('./public/characters/avatar_0.webp');
-  background-size: 648px 384px;
-  /* 1.5x: 432*1.5=648, 256*1.5=384 */
+  background-size: 432px 256px;
+  /* 1x native: 9cols*48=432, 4rows*64=256 */
   background-repeat: no-repeat;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -103,19 +103,19 @@ html {
 /* Speech bubble (single) */
 .speech-bubble {
   position: absolute;
-  bottom: calc(50% + 56px);
+  bottom: calc(50% + 40px);
   left: 50%;
   transform: translateX(-50%);
   background: rgba(255, 255, 255, 0.97);
   border: 2px solid #333;
   border-radius: 4px;
-  padding: 4px 10px;
+  padding: 3px 8px;
   font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 12px;
+  font-size: 11px;
   color: #333;
-  min-width: 120px;
-  max-width: 180px;
+  min-width: 80px;
+  max-width: 130px;
   text-align: center;
   white-space: nowrap;
   z-index: 100;
@@ -163,19 +163,16 @@ html {
   /* Bubble grows upward when exceeding 2 lines, character stays at bottom */
   position: relative;
   pointer-events: auto;
-  /* Card area click detection */
-  width: 90px;
-  padding-bottom: 5px;
+  padding-bottom: 4px;
   border: 1px solid transparent;
   border-radius: 8px;
-  min-height: 130px;
+  min-height: 120px;
   /* Extra space for bubble line wrapping */
 }
 
 /* Keyboard focus styles */
 .agent-card:focus-visible,
-.agent-character:focus-visible,
-.web-dashboard-btn:focus-visible {
+.agent-character:focus-visible {
   outline: 3px solid #2196f3;
   outline-offset: 2px;
   border-radius: 4px;
@@ -362,9 +359,9 @@ html {
   color: #333;
   white-space: nowrap;
   line-height: 1.3;
-  width: 76px;
-  min-width: 76px;
-  max-width: 76px;
+  width: 72px;
+  min-width: 72px;
+  max-width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
@@ -506,7 +503,7 @@ html {
   padding: 3px 9px;
   margin-top: -6px;
   /* Slightly overlap with character line */
-  max-width: 80px;
+  max-width: 72px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -709,92 +706,56 @@ html {
 }
 
 /* ════════════════════════════════════════
-   Avatar Toolbar (Dashboard Button, etc.)
+   Avatar Toolbar (Floating Dashboard Button)
 ═════════════════════════════════════════ */
 .avatar-toolbar {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
+  position: fixed;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
   pointer-events: auto;
   -webkit-app-region: no-drag;
-  padding: 2px 0 4px;
-  opacity: 0.6;
-  transition: opacity 0.2s ease;
-}
-
-.avatar-toolbar:hover {
-  opacity: 1;
 }
 
 .web-dashboard-btn {
-  z-index: 10000;
-  background: rgba(30, 30, 30, 0.85);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #333;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  padding: 3px 10px;
   font-family: var(--font-ui);
   font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
   pointer-events: auto;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  white-space: nowrap;
 }
 
 .web-dashboard-btn:hover {
   background: #2196f3;
-  border-color: #64b5f6;
+  color: #fff;
+  border-color: #1976d2;
   transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
 }
 
 .web-dashboard-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
 }
 
 .web-dashboard-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
 }
 
-/* Settings Button */
-.settings-btn {
-  z-index: 10000;
-  background: rgba(30, 30, 30, 0.85);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 4px 12px;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(8px);
-  pointer-events: auto;
-  text-align: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.settings-btn:hover {
-  background: #ff9800;
-  border-color: #ffb74d;
-  transform: translateY(-1px);
-}
-
-.settings-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.settings-btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
+.web-dashboard-btn:focus-visible {
+  outline: 2px solid #2196f3;
+  outline-offset: 2px;
 }
 
 /* ════════════════════════════════════════

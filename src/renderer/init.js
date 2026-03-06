@@ -37,11 +37,11 @@ async function init() {
     startIdleAnimation();
   }
 
-  // Dashboard button — placed directly above the avatar (toolbar container)
+  // Dashboard button — floating overlay at bottom-right corner
   const toolbar = document.createElement('div');
   toolbar.className = 'avatar-toolbar';
   toolbar.appendChild(createWebDashboardButton());
-  document.body.insertBefore(toolbar, document.getElementById('agent-grid'));
+  document.body.appendChild(toolbar);
 
   // Register event listeners
   window.electronAPI.onAgentAdded(addAgent);

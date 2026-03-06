@@ -56,18 +56,18 @@ describe('formatTime', () => {
 
 describe('getWindowSizeForAgents', () => {
   test('returns minimum size for 0 or 1 agent', () => {
-    expect(getWindowSizeForAgents(0)).toEqual({ width: 220, height: 240 });
-    expect(getWindowSizeForAgents(1)).toEqual({ width: 220, height: 240 });
+    expect(getWindowSizeForAgents(0)).toEqual({ width: 150, height: 150 });
+    expect(getWindowSizeForAgents(1)).toEqual({ width: 150, height: 150 });
   });
 
   test('calculates size for multiple agents (count only)', () => {
     const size2 = getWindowSizeForAgents(2);
-    expect(size2.width).toBeGreaterThan(220);
-    expect(size2.height).toBe(240);
+    expect(size2.width).toBeGreaterThan(150);
+    expect(size2.height).toBe(170);
 
     const size10 = getWindowSizeForAgents(10);
-    expect(size10.width).toBeGreaterThan(220);
-    expect(size10.height).toBe(240);
+    expect(size10.width).toBeGreaterThan(150);
+    expect(size10.height).toBe(170);
   });
 
   test('calculates size for agent array with project groups', () => {
@@ -78,8 +78,8 @@ describe('getWindowSizeForAgents', () => {
     ];
 
     const size = getWindowSizeForAgents(agents);
-    expect(size.width).toBeGreaterThan(220);
-    expect(size.height).toBeGreaterThanOrEqual(240);
+    expect(size.width).toBeGreaterThan(150);
+    expect(size.height).toBeGreaterThanOrEqual(170);
   });
 
   test('handles team agents (subagents/teammates)', () => {
@@ -91,8 +91,8 @@ describe('getWindowSizeForAgents', () => {
     }));
 
     const size = getWindowSizeForAgents(teamAgents);
-    expect(size.width).toBeGreaterThan(220);
-    expect(size.height).toBeGreaterThan(240);
+    expect(size.width).toBeGreaterThan(150);
+    expect(size.height).toBeGreaterThan(170);
   });
 
   test('handles solo agents', () => {
@@ -104,8 +104,8 @@ describe('getWindowSizeForAgents', () => {
     }));
 
     const size = getWindowSizeForAgents(soloAgents);
-    expect(size.width).toBeGreaterThan(220);
-    expect(size.height).toBe(240);
+    expect(size.width).toBeGreaterThan(150);
+    expect(size.height).toBe(170);
   });
 
   test('respects max column limit of 10', () => {
@@ -118,6 +118,6 @@ describe('getWindowSizeForAgents', () => {
 
     const size = getWindowSizeForAgents(manyAgents);
     // Width should not exceed what 10 columns would allow
-    expect(size.width).toBeLessThanOrEqual(1200);
+    expect(size.width).toBeLessThanOrEqual(1000);
   });
 });

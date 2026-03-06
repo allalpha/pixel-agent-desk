@@ -77,7 +77,7 @@ function updateAgentState(agentId, container, agentOrState) {
     if (bubble) bubble.textContent = config.label;
     if (timerEl) {
       timerEl.textContent = agentState.lastFormattedTime;
-      timerEl.style.display = '';
+      timerEl.style.visibility = 'visible';
     }
 
   } else if (config.anim === 'complete') {
@@ -88,7 +88,7 @@ function updateAgentState(agentId, container, agentOrState) {
     if (bubble) bubble.textContent = config.label;
     if (timerEl) {
       timerEl.textContent = agentState.lastFormattedTime || '00:00';
-      timerEl.style.display = '';
+      timerEl.style.visibility = 'visible';
     }
 
   } else {
@@ -98,7 +98,7 @@ function updateAgentState(agentId, container, agentOrState) {
     }
     agentState.startTime = null;
     agentState.lastFormattedTime = '';
-    if (timerEl) timerEl.style.display = 'none';
+    if (timerEl) timerEl.style.visibility = 'hidden';
     if (bubble) {
       // Thinking 상태: animated dots 표시
       if (state === 'Thinking' && !isAggregated) {
@@ -182,7 +182,7 @@ function createAgentCard(agent) {
   // Timer element (사전 생성 — updateAgentState에서 동적 DOM 삽입 방지)
   const timerEl = document.createElement('div');
   timerEl.className = 'agent-timer';
-  timerEl.style.display = 'none';
+  timerEl.style.visibility = 'hidden';
 
   // Assemble card
   card.appendChild(bubble);

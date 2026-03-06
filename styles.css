@@ -376,13 +376,16 @@ html {
   /* 상태 전환 시 부드러운 색상 변화 */
 }
 
-/* 타이머 표시용 요소 */
+/* 타이머 표시용 요소 — visibility로 토글하여 높이 고정 */
 .agent-timer {
   font-family: var(--font-body);
   font-size: 11px;
-  color: #666;
+  color: #e0e0e0;
   margin-top: 2px;
   font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  visibility: hidden;
+  min-height: 14px;
 }
 
 /* ═══ 통합 상태 색상 (3개 뷰 공통) ═══

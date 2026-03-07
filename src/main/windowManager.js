@@ -57,15 +57,18 @@ function createWindowManager({ agentManager, sessionScanner, heatmapScanner, deb
 
     errorHandler.setMainWindow(mainWindow);
 
-    // Constrain window to workArea after drag
+    // Constrain window to display bounds after drag (multi-monitor aware)
+    let constraining = false;
     mainWindow.on('moved', () => {
-      if (mainWindow.isDestroyed()) return;
+      if (constraining || mainWindow.isDestroyed()) return;
       const b = mainWindow.getBounds();
       const wa = screen.getDisplayMatching(b).bounds;
       const cx = Math.max(wa.x, Math.min(b.x, wa.x + wa.width - b.width));
       const cy = Math.max(wa.y, Math.min(b.y, wa.y + wa.height - b.height));
       if (cx !== b.x || cy !== b.y) {
+        constraining = true;
         mainWindow.setPosition(cx, cy);
+        constraining = false;
       }
     });
 

@@ -79,8 +79,9 @@ function registerIpcHandlers({ agentManager, sessionPids, windowManager, debugLo
   ipcMain.on('constrain-window', (event, bounds) => {
     const mw = windowManager.mainWindow;
     if (!mw) return;
-    const { width, height } = mw.getBounds();
-    const wa = screen.getDisplayMatching(mw.getBounds()).bounds;
+    const wb = mw.getBounds();
+    const { width, height } = wb;
+    const wa = screen.getDisplayMatching(wb).bounds;
     mw.setPosition(
       Math.max(wa.x, Math.min(bounds.x, wa.x + wa.width - width)),
       Math.max(wa.y, Math.min(bounds.y, wa.y + wa.height - height))
